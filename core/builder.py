@@ -6,10 +6,11 @@ Created on Sat Apr  8 17:40:00 2017
 """
 import tensorflow as tf
 
-from .. import printProgress
+import printProgress
 import collections
 
 operations = {}
+awailable_datasets={}
 
 
 def create_network(input, configuration, network_name, reuse=None, default_dict={},
@@ -34,6 +35,8 @@ def create_network(input, configuration, network_name, reuse=None, default_dict=
         construct_log["features"] = []
         construct_log["printer"] = printprog
         construct_log["default_dict"] = default_dict
+        construct_log["awailable_datasets"]=awailable_datasets
+        construct_log["reuse"] = reuse
         construct_log.update(construct_log_config)
         type_n = "Network"
     else:
@@ -43,8 +46,12 @@ def create_network(input, configuration, network_name, reuse=None, default_dict=
         with tf.variable_scope(network_name, reuse=reuse) as scope:
             if type_n == "Network":
                 construct_log["network_scope"] = scope
+            if type(configuration) is not list:
+                configuration=[configuration]
             for i, c in enumerate(configuration):
                 # print default_dict
+                if type(c) is not list:
+                    c=[c]
                 with tf.variable_scope("layer_" + str(i)):
                     # print c
                     c = list(c)
@@ -98,6 +105,7 @@ def create_network(input, configuration, network_name, reuse=None, default_dict=
                                 c[2][ic] = node
                             elif c[2][ic] == "@input":
                                 c[2][ic] = current_layer
+                    print(c)
                     current_layer = opp(current_layer, str(i), construct_log, *c[1], **c[2])
                     construct_log["features"].append(current_layer)
 

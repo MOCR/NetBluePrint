@@ -1,0 +1,11 @@
+{
+  "structure" : [
+    {"type" : "conv"},
+    {"type" : "tf.nn.relu"}
+  ],
+  "argument_translation" : {
+    "out_size" : "conv_0/out_size",
+    "kernel_size" : "conv_0/kernel_size"
+
+  }
+}

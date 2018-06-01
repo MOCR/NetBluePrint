@@ -2,6 +2,7 @@ import os, pkgutil
 import importlib
 
 operations = {}
+awailable_datasets={}
 
 import template_reader
 from os import listdir
@@ -9,20 +10,47 @@ from os.path import isfile, join
 import commentjson
 import tensorflow as tf
 import types
+from dataset import dataset
+import inspect
+
+import builder
 
 ### PYTHON LAYER FILES SCANNING ###
 
 root_dir=os.path.split(__file__)[0]+"/.."
-print(root_dir)
 
 operations_locations=["./operations/", root_dir+"/operations/"]
 templates_locations=["./templates/", root_dir+ "/templates/"]
+datasets_locations=["./datasets/", root_dir+"/datasets/"]
+
+tmp_list=[]
+for i in range(len(operations_locations)):
+    operations_locations[i]=os.path.abspath(operations_locations[i])+"/"
+    if os.path.exists(operations_locations[i]):
+        tmp_list.append(operations_locations[i])
+operations_locations=tmp_list
+
+tmp_list=[]
+for i in range(len(templates_locations)):
+    templates_locations[i]=os.path.abspath(templates_locations[i])+"/"
+    if os.path.exists(templates_locations[i]):
+        tmp_list.append(templates_locations[i])
+templates_locations=tmp_list
+tmp_list=[]
+for i in range(len(datasets_locations)):
+    datasets_locations[i]=os.path.abspath(datasets_locations[i])+"/"
+    if os.path.exists(datasets_locations[i]):
+        tmp_list.append(datasets_locations[i])
+datasets_locations=tmp_list
+
+operations_locations=list(set(operations_locations))
+templates_locations= list(set(templates_locations))
+datasets_locations=list(set(datasets_locations))
 
 
 modules = pkgutil.iter_modules(operations_locations)
 
 for m in modules:
-    print(m)
     #mod = m[0].#importlib.import_module(locations[1]+m)
     mod = m[0].find_module(m[1]).load_module(m[1])
     contenant = dir(mod)
@@ -35,7 +63,19 @@ for m in modules:
                 else:
                     operations[item.func_name]=item
 
-print(operations)
+datasets_modules = pkgutil.iter_modules(datasets_locations)
+
+for m in datasets_modules:
+    #mod = m[0].#importlib.import_module(locations[1]+m)
+    mod = m[0].find_module(m[1]).load_module(m[1])
+    #print(dir(mod))
+    contenant = dir(mod)
+    for c in contenant:
+        item = getattr(mod, c)
+        if inspect.isclass(item) and issubclass(item, dataset) and item!= dataset:
+            print(item)
+            awailable_datasets[c]=item
+
 
 template_files=[]
 for t_loc in templates_locations:
@@ -59,7 +99,7 @@ for block in template_files:
     at = {}
     if "argument_translation" in blockConf:
         at = blockConf["argument_translation"]
-    block_op = block_creator.create_block_operation(block_struct, name, at)
+    block_op = template_reader.create_block_operation(block_struct, name, at)
     if name in operations:
         raise Exception("Unavailable block name")
     else:
@@ -98,5 +138,10 @@ for attr in dir(tf.nn):
         else:
             operations["tf.nn."+attr] = tf_function_wrapper(obj, "nn."+attr)
 
-print(operations.keys())
+
+
+builder.operations=operations
+builder.awailable_datasets=awailable_datasets
+
+create_workflow=builder.create_network
 
