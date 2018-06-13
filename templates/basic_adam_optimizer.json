@@ -1,0 +1,11 @@
+{
+  "structure" : [
+    {"type" : "set_adam_optimizer"},
+    {"type" : "compute_gradients"},
+    {"type" : "trainer"},
+    {"type" : "initializer"}
+  ],
+  "argument_translation" : {
+    "learning_rate" : "set_adam_optimizer_0/learning_rate"
+  }
+}
