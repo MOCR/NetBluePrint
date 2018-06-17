@@ -73,7 +73,6 @@ for m in datasets_modules:
     for c in contenant:
         item = getattr(mod, c)
         if inspect.isclass(item) and issubclass(item, dataset) and item!= dataset:
-            print(item)
             awailable_datasets[c]=item
 
 

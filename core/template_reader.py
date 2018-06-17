@@ -1,6 +1,6 @@
 #import tensorflow as tf
 
-from DL_src.networks import network
+from NetBluePrint.core import builder
 
 def create_block_operation(structure, name, argument_translation={}):
 	def created_block(input, layer_id, construct_log, **kw):
@@ -22,7 +22,7 @@ def create_block_operation(structure, name, argument_translation={}):
 		construct_log["block_hierarchy"].append(name)
 		def_dict = dict(construct_log["default_dict"])
 		def_dict.update(kw)
-		ret, _ = network.create_network(input, structure, name+"_"+str(layer_id), default_dict=def_dict, parent_log = construct_log)
+		ret, _ = builder.create_network(input, structure, name+"_"+str(layer_id), default_dict=def_dict, parent_log = construct_log)
 		del construct_log["block_hierarchy"][-1]
 		return ret
 	return created_block

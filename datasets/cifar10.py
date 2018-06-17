@@ -9,6 +9,7 @@ import tensorflow as tf
 
 import cifar.load_cifar as cifar
 from NetBluePrint.core.dataset import dataset
+import numpy as np
 
 class cifar10(dataset):
     def __init__(self, batchsize = 64, resize_dim=None):
@@ -16,6 +17,7 @@ class cifar10(dataset):
         with tf.name_scope("cifar10"):
             def get_batch(size):
                 x = cifar.nextBatch(size)
+                x=x.astype(np.float32)/255.0
                 return x
             #self.batchsize = tf.placeholder_with_default(batchsize, [], "batch_size")
             self.batch = tf.py_func(get_batch, [self.batchsize], tf.float32)

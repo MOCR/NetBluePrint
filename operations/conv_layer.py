@@ -8,6 +8,8 @@ Created on Sat Apr  8 14:34:22 2017
 import tensorflow as tf
 import numpy as np
 
+from tensorflow.contrib.layers import batch_norm
+
 def conv(input, layer_id,construct_log, out_size, kernel_size, reduce_factor=1, ortho=False):
     with tf.variable_scope("conv_"+str(layer_id), reuse=construct_log["reuse"]) as scope:
         if ortho:
@@ -62,7 +64,7 @@ def conv_expand(input, layer_id,construct_log, out_size, kernel_size, expand_Siz
         #output = tf.nn.relu(output)
         construct_log["scopes"].append(scope)
     return output
-def transpose_conv(input, layer_id,construct_log, out_size, kernel_size, expand_Size, preResize=False, ortho=False, grid_correction=False):
+def transpose_conv(input, layer_id,construct_log, out_size, kernel_size, expand_Size, preResize=True, ortho=False, grid_correction=False):
     with tf.variable_scope("transpose_conv_"+str(layer_id), reuse=construct_log["reuse"]) as scope:
         if preResize:
             input_Size = input.get_shape().as_list()
@@ -171,3 +173,10 @@ def mean_var_summary(input, layer_id, construct_log, extra_name=""):
 def tanh(input, layer_id, construct_log):
     with tf.variable_scope("tanh_"+str(layer_id), reuse=construct_log["reuse"]):
         return tf.nn.tanh(input)
+
+def batch_norm_layer(input, layer_id, construct_log):
+    with tf.variable_scope("batch_norm_" + str(layer_id), reuse=construct_log["reuse"])as batch_scope:
+        out = batch_norm(input, is_training=True,
+                           center=False, scale=True, updates_collections=None, scope=batch_scope, fused=True, epsilon=1e-5, decay = 0.9)
+        return out
+
