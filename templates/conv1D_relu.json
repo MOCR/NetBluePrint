@@ -1,0 +1,13 @@
+{
+  "structure" : [
+    {"type" : "conv1D"},
+    {"type" : "batch_norm_layer"},
+    {"type" : "tf.nn.relu"}
+  ],
+  "argument_translation" : {
+    "out_size" : "conv1D_0/out_size",
+    "kernel_size" : "conv1D_0/kernel_size",
+    "reduce_factor" : "conv1D_0/reduce_factor"
+
+  }
+}

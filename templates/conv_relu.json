@@ -8,6 +8,5 @@
     "out_size" : "conv_0/out_size",
     "kernel_size" : "conv_0/kernel_size",
     "reduce_factor" : "conv_0/reduce_factor"
-
   }
 }

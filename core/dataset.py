@@ -15,3 +15,5 @@ class dataset(object):
         return self.data_dict[key]
     def get_keys(self):
         return self.data_dict.keys()
+    def get_datadict(self):
+        return self.data_dict

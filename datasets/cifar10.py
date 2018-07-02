@@ -31,7 +31,3 @@ class cifar10(dataset):
             self.batch=tf.reshape(self.batch, [-1, self.x_dim, self.y_dim, 3])
 
             self.data_dict["image"]=self.batch
-    def get_shape(self):
-        return (32,32,3)
-    def get_input(self):
-        return self.batch

@@ -49,7 +49,6 @@ def conv1D(input, layer_id,construct_log, out_size, kernel_size, reduce_factor=1
         output+=b
         #summarize_angles(w)
         construct_log["scopes"].append(scope)
-        output=tf.nn.tanh(output)
     return output
     
 def conv_expand(input, layer_id,construct_log, out_size, kernel_size, expand_Size):
@@ -70,7 +69,8 @@ def transpose_conv(input, layer_id,construct_log, out_size, kernel_size, expand_
             input_Size = input.get_shape().as_list()
             #input = transpose_conv(input, 0,construct_log, input_Size[-1], expand_Size, expand_Size, preResize=False, ortho=True)
             resize = [int(input_Size[1])*expand_Size,int(input_Size[2])*expand_Size]
-            input = tf.image.resize_bilinear(input, resize)
+            #input = tf.image.resize_bilinear(input, resize)
+            input = tf.image.resize_nearest_neighbor(input, resize)
             # input += tf.random_normal(tf.shape(input), stddev=0.1)
             expand_Size = 1
         if ortho:

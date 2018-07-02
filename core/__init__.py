@@ -21,7 +21,7 @@ root_dir=os.path.split(__file__)[0]+"/.."
 
 operations_locations=["./operations/", root_dir+"/operations/"]
 templates_locations=["./templates/", root_dir+ "/templates/"]
-datasets_locations=["./datasets/", root_dir+"/datasets/"]
+datasets_locations=["./datasets/", root_dir+"/datasets/", os.environ["DATASET_PATH"]]
 
 tmp_list=[]
 for i in range(len(operations_locations)):
