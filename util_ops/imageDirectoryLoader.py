@@ -15,9 +15,11 @@ import imageio
 import numpy as np
 import time
 
+RANDOM=0
+CYCLE=1
 
 class imageDirectoryLoader:
-    def __init__(self, batchsize, dirname, subdir=True, name="", coordinator=None):
+    def __init__(self, batchsize, dirname, subdir=True, name="", mode=RANDOM):
         session = tf.get_default_session()
         print "BATCH SIZE = ", batchsize
         with tf.variable_scope("Image_Loader_" + name):
@@ -44,8 +46,7 @@ class imageDirectoryLoader:
                         raise Exception("Empty directory !")
                     files = tf.constant(files)
                     labels = tf.constant(labels)
-
-                def genIndexs(size, maxConsec=4):
+                def getRandomIndexs(size, maxConsec=4):
                     ret = []
                     while len(ret) < size:
                         r = np.random.randint(0, high=numImages)
@@ -57,10 +58,24 @@ class imageDirectoryLoader:
                     if len(ret) != size:
                         exit(-44)
                     return np.array(ret, dtype=np.int32)
+                def getCycleIndexs(size):
+                    ret=[]
+                    while len(ret)< size:
+                        ret.append(self.cycle_counter)
+                        self.cycle_counter=(self.cycle_counter+1)%numImages
+                    return np.array(ret, dtype=np.int32)
 
-                indexs = tf.py_func(genIndexs, [batchsize * 4], tf.int32)
+                getIndexs=None
+
+                if mode==RANDOM:
+                    getIndexs=getRandomIndexs
+                else:
+                    self.cycle_counter=0
+                    getIndexs =getCycleIndexs
+                indexs = tf.py_func(getIndexs, [batchsize * 4], tf.int32)
 
                 randomGather = tf.gather(files, indexs)
+                self.filename=randomGather
 
                 op = lambda x: tf.image.decode_image(tf.read_file(x), channels=3)
 
@@ -73,6 +88,8 @@ class imageDirectoryLoader:
 
     def getBatch(self):
         return self.batch
+    def getFilename(self):
+        return self.filename
 
     def getLabel(self):
         return 0  # self.labels
