@@ -20,3 +20,6 @@ def bridge_layer(input, layer_id, construct_log, bridge_name):
 def stop_grad(input, layer_id, construct_log):
     with tf.name_scope("stop_gradient"):    
         return tf.stop_gradient(input)
+
+def concat(input, layer_id, construct_log, axis, item_to_concat):
+    return tf.concat([input, item_to_concat], axis)

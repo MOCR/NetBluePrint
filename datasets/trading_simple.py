@@ -14,7 +14,6 @@ class trading_simple(dataset):
             'x': "INDEXDJX",  # Stock exchange symbol on which stock is traded (ex: "NASD")
             'p': dataspan  # Period (Ex: "1Y" = 1 year)
         }
-        print(get_price_data(param))
         self.data = np.array(get_price_data(param).values[:,:-1], dtype=np.float32)
 
         with tf.name_scope("trading_simple"):

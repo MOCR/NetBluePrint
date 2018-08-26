@@ -1,3 +1,14 @@
+
+"""
+core/__init__.py is a central component of NetBluePrint. It is used to gather every resources files availables.
+
+It construct a dictionary of operations that can be used in a workflow's configuration.
+It construct a dictionary of datasets that can be loaded in the workflow.
+
+"""
+
+
+
 import os, pkgutil
 import importlib
 
@@ -21,7 +32,9 @@ root_dir=os.path.split(__file__)[0]+"/.."
 
 operations_locations=["./operations/", root_dir+"/operations/"]
 templates_locations=["./templates/", root_dir+ "/templates/"]
-datasets_locations=["./datasets/", root_dir+"/datasets/", os.environ["DATASET_PATH"]]
+datasets_locations=["./datasets/", root_dir+"/datasets/"]
+if "DATASET_PATH" in os.environ:
+    datasets_locations.append(os.environ["DATASET_PATH"])
 
 tmp_list=[]
 for i in range(len(operations_locations)):
@@ -94,6 +107,9 @@ for block in template_files:
     for l in blockConf["structure"]:
         type_ = l["type"]
         del l["type"]
+        for k in l.keys():
+            if isinstance(l[k], unicode):
+                l[k] = l[k].encode('ascii','ignore')
         block_struct.append([type_, l])
     at = {}
     if "argument_translation" in blockConf:
@@ -142,5 +158,5 @@ for attr in dir(tf.nn):
 builder.operations=operations
 builder.awailable_datasets=awailable_datasets
 
-create_workflow=builder.create_network
+create_workflow=builder.create_workflow
 

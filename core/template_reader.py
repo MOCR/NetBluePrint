@@ -24,8 +24,8 @@ def create_block_operation(structure, name, argument_translation={}):
         construct_log["block_hierarchy"].append(name)
         def_dict = dict(construct_log["default_dict"])
         def_dict.update(kw)
-        ret, _ = builder.create_network(input, structure, name + "_" + str(layer_id), default_dict=def_dict,
-                                        parent_log=construct_log)
+        ret, _ = builder.create_workflow(input, structure, name + "_" + str(layer_id), default_dict=def_dict,
+                                         parent_log=construct_log)
         del construct_log["block_hierarchy"][-1]
         return ret
 

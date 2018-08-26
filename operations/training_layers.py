@@ -97,9 +97,12 @@ def dist_loss(input, layer_id, construct_log, num_entries=1000, rate=1.0):
         tf.summary.scalar("loss", loss)
         return input
         
-def compute_gradients(input, layer_id, construct_log, scopes=["self"], losses=[], clear_losses=False):
+def compute_gradients(input, layer_id, construct_log, scopes=["self"], losses=[], clear_losses=False, add_regularization=True):
     with tf.name_scope("gradient_layer_"+layer_id):
+        print(construct_log["losses"])
         loss = sum(construct_log["losses"]+losses)
+        if add_regularization:
+            loss += sum(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))*0.001
         l_var = []
         for s in scopes:
             if s == "self":
