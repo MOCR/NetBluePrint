@@ -25,6 +25,7 @@ from dataset import dataset
 import inspect
 
 import builder
+import printProgress
 
 ### PYTHON LAYER FILES SCANNING ###
 
@@ -159,4 +160,5 @@ builder.operations=operations
 builder.awailable_datasets=awailable_datasets
 
 create_workflow=builder.create_workflow
+printProgress=printProgress.printProg
 

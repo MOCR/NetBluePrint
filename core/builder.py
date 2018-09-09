@@ -47,7 +47,7 @@ def create_workflow(input, configuration, network_name, reuse=None, default_dict
         type_n = "Local"
     with construct_log["printer"](type_n + " creation : " + network_name):
         with tf.variable_scope(network_name if net_scope == None else net_scope, reuse=reuse) as scope:
-            print(scope.name)
+            #print(scope.name)
             if type_n == "Main":
                 construct_log["main_scope"] = scope
             construct_log["local_scope"] = scope
@@ -118,7 +118,6 @@ def create_workflow(input, configuration, network_name, reuse=None, default_dict
                                 c[2][ic] = node
                             elif c[2][ic] == "@input":
                                 c[2][ic] = current_layer
-                    print(c)
                     current_layer = opp(current_layer, str(i), construct_log, *c[1], **c[2])
                     construct_log["features"].append(current_layer)
             construct_log["local_scope"] = scope

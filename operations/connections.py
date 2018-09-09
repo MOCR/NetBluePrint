@@ -23,3 +23,6 @@ def stop_grad(input, layer_id, construct_log):
 
 def concat(input, layer_id, construct_log, axis, item_to_concat):
     return tf.concat([input, item_to_concat], axis)
+
+def to_front_of_list(input, layer_id,construct_log, inp_list):
+    return [input] + inp_list

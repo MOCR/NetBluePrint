@@ -21,7 +21,6 @@ CYCLE=1
 class imageDirectoryLoader:
     def __init__(self, batchsize, dirname, subdir=True, name="", mode=RANDOM):
         session = tf.get_default_session()
-        print "BATCH SIZE = ", batchsize
         with tf.variable_scope("Image_Loader_" + name):
             with tf.device("/cpu:0"):
                 if not subdir:

@@ -99,10 +99,9 @@ def dist_loss(input, layer_id, construct_log, num_entries=1000, rate=1.0):
         
 def compute_gradients(input, layer_id, construct_log, scopes=["self"], losses=[], clear_losses=False, add_regularization=True):
     with tf.name_scope("gradient_layer_"+layer_id):
-        print(construct_log["losses"])
         loss = sum(construct_log["losses"]+losses)
         if add_regularization:
-            loss += sum(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))*0.001
+            loss += sum(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))*0.0001
         l_var = []
         for s in scopes:
             if s == "self":
@@ -118,7 +117,7 @@ def compute_gradients(input, layer_id, construct_log, scopes=["self"], losses=[]
         if clear_losses:
             construct_log["losses"]=[]
         return input
-def trainer(input, layer_id,construct_log, external_gradz=[], LARS=False, master_learning_rate=0.001, trust_coef=0.001):
+def trainer(input, layer_id,construct_log, external_gradz=[]):
     with tf.name_scope("trainer_"+layer_id):
         merged_gradz = []
         if "gradients" not in construct_log:
@@ -127,30 +126,22 @@ def trainer(input, layer_id,construct_log, external_gradz=[], LARS=False, master
         for i in range(len(gradients)):
             if gradients[i][0] != None:
                 lgw=[]
-                for ig in range(len(gradients)):
+                for ig in range(i+1, len(gradients)):
                     if gradients[ig][1].name == gradients[i][1].name:
                         lgw.append(gradients[ig][0])
-                merged_gradz.append((tf.reduce_mean(tf.stack(lgw), 0), gradients[i][1]))
+                if len(lgw)!=0:
+                    merged_gradz.append((tf.reduce_mean(tf.stack(lgw), 0), gradients[i][1]))
+                else:
+                    merged_gradz.append(gradients[i])
         gradients=merged_gradz
-        for g in gradients:
-            if g[0] != None:
-                pass #tf.summary.scalar("w_grad_ratio_"+g[1].name, tf.norm(g[1])/tf.norm(g[0]))
-                #tf.summary.scalar("w_" + g[1].name, tf.norm(g[1]))
-                #tf.summary.scalar("grad_" + g[1].name, tf.norm(g[0]))
-        if not LARS:
-            apply_gradients=[construct_log["optimizer"].apply_gradients(gradients)]
-        else:
-            apply_gradients=[]
-            for g in gradients:
-                if g[0] != None:
-                    apply_gradients.append(tf.train.AdamOptimizer(learning_rate=master_learning_rate*trust_coef*tf.norm(g[1])/(tf.norm(g[0])+0.0001),name="local_adam_"+g[1].name.split(":")[0]).apply_gradients([g]))
+        apply_gradients=[construct_log["optimizer"].apply_gradients(gradients)]
         with tf.control_dependencies(apply_gradients):
             return tf.identity(input)
 def l2_norm_layer(input, layer_id, construct_log):
     return tf.nn.l2_normalize(input,-1)
 def set_adam_optimizer(input, layer_id, construct_log, learning_rate=0.0001, beta=0.9):
     with tf.variable_scope("adamOptimizer_"+layer_id):
-        construct_log["optimizer"]=tf.train.AdamOptimizer(learning_rate, beta)
+        construct_log["optimizer"]=tf.train.AdamOptimizer(learning_rate)#, beta)
         return input
 def initializer(input, layer_id, construct_log):
     sess = tf.get_default_session()

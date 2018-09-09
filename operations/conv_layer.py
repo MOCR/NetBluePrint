@@ -174,9 +174,25 @@ def tanh(input, layer_id, construct_log):
     with tf.variable_scope("tanh_"+str(layer_id), reuse=construct_log["reuse"]):
         return tf.nn.tanh(input)
 
-def batch_norm_layer(input, layer_id, construct_log):
+def batch_norm_layer(input, layer_id, construct_log, is_training=True):
     with tf.variable_scope("batch_norm_" + str(layer_id), reuse=construct_log["reuse"])as batch_scope:
-        out = batch_norm(input, is_training=True,
-                           center=False, scale=True, updates_collections=None, scope=batch_scope, fused=True, epsilon=1e-5, decay = 0.9)
+        out = batch_norm(input, is_training=is_training,
+                           center=False, scale=True, scope=batch_scope, fused=True, epsilon=1e-5, decay = 0.9,  renorm=False)
         return out
+
+def apply_updates(input, layer_id, construct_log, scopes=["self"]):
+    updates = []
+    if type(scopes) != list:
+        scopes = [scopes]
+    for s in scopes:
+        if s == "self":
+            updates += tf.get_collection(tf.GraphKeys.UPDATE_OPS, scope=construct_log["main_scope"].name)
+        elif type(s) is str:
+            updates += tf.get_collection(tf.GraphKeys.UPDATE_OPS, scope=construct_log["network_scope"][s].name)
+        else:
+            updates += tf.get_collection(tf.GraphKeys.UPDATE_OPS, scope=s.name)
+    with tf.name_scope("apply_updates"):
+        with tf.control_dependencies(updates):
+            return tf.identity(input)
+
 
