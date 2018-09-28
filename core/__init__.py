@@ -128,12 +128,13 @@ def tf_function_wrapper(tf_function, name):
         with construct_log["printer"]("tensorflow "+name+" layer number " + str(layer_id)):
             with tf.variable_scope("TF_"+name+"_"+str(layer_id)):
                 filtered_kw = {}
-                print()
-                print(dir(tf_function))
-                print(tf_function.__code__.co_varnames[:tf_function.__code__.co_argcount])
-                print()
+                if tf_function.__code__.co_argcount==0 and hasattr(tf_function, "_tf_decorator"):
+                    decorated_func = tf_function._tf_decorator.decorated_target
+                    arguments_list = decorated_func.__code__.co_varnames[:decorated_func.__code__.co_argcount]
+                else:
+                    arguments_list = tf_function.__code__.co_varnames[:tf_function.__code__.co_argcount]
                 for k in kw.keys():
-                    if k in tf_function.__code__.co_varnames[:tf_function.__code__.co_argcount]:
+                    if k in arguments_list:
                         filtered_kw[k]=kw[k]
                     else:
                         if "printer" in construct_log and hasattr(construct_log["printer"], "printWarning"):
