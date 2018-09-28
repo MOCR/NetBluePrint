@@ -128,6 +128,9 @@ def tf_function_wrapper(tf_function, name):
         with construct_log["printer"]("tensorflow "+name+" layer number " + str(layer_id)):
             with tf.variable_scope("TF_"+name+"_"+str(layer_id)):
                 filtered_kw = {}
+                print()
+                print(tf_function.__code__.co_varnames[:tf_function.__code__.co_argcount])
+                print()
                 for k in kw.keys():
                     if k in tf_function.__code__.co_varnames[:tf_function.__code__.co_argcount]:
                         filtered_kw[k]=kw[k]
