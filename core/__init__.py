@@ -129,11 +129,11 @@ def tf_function_wrapper(tf_function, name):
             with tf.variable_scope("TF_"+name+"_"+str(layer_id)):
                 filtered_kw = {}
                 for k in kw.keys():
-                    if k in tf_function.__code__.co_varnames[1:tf_function.__code__.co_argcount]:
+                    if k in tf_function.__code__.co_varnames[:tf_function.__code__.co_argcount]:
                         filtered_kw[k]=kw[k]
                     else:
                         if "printer" in construct_log and hasattr(construct_log["printer"], "printWarning"):
-                            construct_log["printer"].printWarning(name+" has no argument \" " + k + " \", argument is ignored.")
+                            construct_log["printer"].printWarning(name+" has no argument \"" + k + "\", argument is ignored.")
                 return tf_function(input, **filtered_kw)
     return wrapped_function
 
