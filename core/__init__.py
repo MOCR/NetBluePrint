@@ -127,7 +127,14 @@ def tf_function_wrapper(tf_function, name):
     def wrapped_function(input, layer_id, construct_log, **kw):
         with construct_log["printer"]("tensorflow "+name+" layer number " + str(layer_id)):
             with tf.variable_scope("TF_"+name+"_"+str(layer_id)):
-                return tf_function(input, **kw)
+                filtered_kw = {}
+                for k in kw.keys():
+                    if k in tf_function.__code__.co_varnames[1:tf_function.__code__.co_argcount]:
+                        filtered_kw[k]=kw[k]
+                    else:
+                        if "printer" in construct_log and hasattr(construct_log["printer"], "printWarning"):
+                            construct_log["printer"].printWarning(name+" has no argument \" " + k + " \", argument is ignored.")
+                return tf_function(input, **filtered_kw)
     return wrapped_function
 
 for attr in dir(tf):
