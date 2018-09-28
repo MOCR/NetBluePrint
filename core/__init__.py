@@ -129,7 +129,7 @@ def tf_function_wrapper(tf_function, name):
             with tf.variable_scope("TF_"+name+"_"+str(layer_id)):
                 filtered_kw = {}
                 print()
-                print(tf_function.__code__.co_varnames)
+                print(dir(tf_function.__code__))
                 print(tf_function.__code__.co_varnames[:tf_function.__code__.co_argcount])
                 print()
                 for k in kw.keys():
