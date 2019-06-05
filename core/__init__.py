@@ -14,13 +14,19 @@ import importlib
 
 operations = {}
 awailable_datasets={}
+awailable_filters={}
+
+operations_hash = {}
 
 import template_reader
+
+from .filter_loader import filter_loader
 from os import listdir
 from os.path import isfile, join
 import commentjson
 import tensorflow as tf
 import types
+import glob
 from dataset import dataset
 import inspect
 
@@ -35,7 +41,9 @@ operations_locations=["./operations/", root_dir+"/operations/"]
 templates_locations=["./templates/", root_dir+ "/templates/"]
 datasets_locations=["./datasets/", root_dir+"/datasets/"]
 if "DATASET_PATH" in os.environ:
-    datasets_locations.append(os.environ["DATASET_PATH"])
+    datasets_locations+=os.environ["DATASET_PATH"].split(":")
+
+filter_base=["./filter_base/",  root_dir+"/filter_base/"]
 
 tmp_list=[]
 for i in range(len(operations_locations)):
@@ -56,11 +64,23 @@ for i in range(len(datasets_locations)):
     if os.path.exists(datasets_locations[i]):
         tmp_list.append(datasets_locations[i])
 datasets_locations=tmp_list
+tmp_list=[]
+for i in range(len(filter_base)):
+    filter_base[i]=os.path.abspath(filter_base[i])+"/"
+    if os.path.exists(filter_base[i]):
+        tmp_list.append(filter_base[i])
+filter_base=tmp_list
 
 operations_locations=list(set(operations_locations))
 templates_locations= list(set(templates_locations))
 datasets_locations=list(set(datasets_locations))
+filter_base=list(set(filter_base))
 
+def operation_hasher(op):
+    base = hash(op.__code__.co_code)
+    for v in op.__code__.co_names+op.__code__.co_consts:
+        base += base * hash(v)
+    return base
 
 modules = pkgutil.iter_modules(operations_locations)
 
@@ -76,6 +96,7 @@ for m in modules:
                     raise Exception("Duplicate func_name in operations")
                 else:
                     operations[item.func_name]=item
+                    operations_hash[item.func_name]=item
 
 datasets_modules = pkgutil.iter_modules(datasets_locations)
 
@@ -113,9 +134,12 @@ for block in template_files:
                 l[k] = l[k].encode('ascii','ignore')
         block_struct.append([type_, l])
     at = {}
+    default_parameters={}
     if "argument_translation" in blockConf:
         at = blockConf["argument_translation"]
-    block_op = template_reader.create_block_operation(block_struct, name, at)
+    if "default_values" in blockConf:
+        default_parameters = blockConf["default_values"]
+    block_op = template_reader.create_block_operation(block_struct, name, at, default_parameters)
     if name in operations:
         raise Exception("Unavailable block name")
     else:
@@ -166,10 +190,18 @@ for attr in dir(tf.nn):
         else:
             operations["tf.nn."+attr] = tf_function_wrapper(obj, "nn."+attr)
 
+#scanning awailable pretrained filters
+
+for loc in filter_base:
+    files = glob.glob(loc+"*.pkl")
+    for f in files:
+        awailable_filters[os.path.basename(f)] = filter_loader(f)
+
 
 
 builder.operations=operations
 builder.awailable_datasets=awailable_datasets
+builder.awailable_filters = awailable_filters
 
 create_workflow=builder.create_workflow
 printProgress=printProgress.printProg

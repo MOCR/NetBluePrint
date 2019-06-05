@@ -1,7 +1,6 @@
 {
   "structure" : [
     {"type" : "conv"},
-    {"type" : "batch_norm_layer"},
     {"type" : "tf.nn.relu"}
   ],
   "argument_translation" : {

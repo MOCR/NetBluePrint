@@ -71,7 +71,7 @@ class imageDirectoryLoader:
                 else:
                     self.cycle_counter=0
                     getIndexs =getCycleIndexs
-                indexs = tf.py_func(getIndexs, [batchsize * 4], tf.int32)
+                indexs = tf.py_func(getIndexs, [batchsize], tf.int32)
 
                 randomGather = tf.gather(files, indexs)
                 self.filename=randomGather
@@ -81,9 +81,10 @@ class imageDirectoryLoader:
                 read = tf.map_fn(op, randomGather, dtype=tf.uint8)
 
                 read = tf.to_float(read) / 256.0*2.0-1.0
-                self.batch=read
                 first_img = imageio.imread(session.run(files[0]))
-                self.shape = first_img.shape
+                self.shape = list(first_img.shape)
+                read = tf.reshape(read, [batchsize] + self.shape)
+                self.batch=read
 
     def getBatch(self):
         return self.batch

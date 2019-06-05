@@ -1,0 +1,29 @@
+{
+  "structure" : [
+    {"type" : ">:/dense_unit_input"},
+    {"type" : "batch_norm_layer"},
+    {"type" : "do_activation"},
+    {"type" : "conv", "kernel_size" : 1},
+    {"type" : "batch_norm_layer"},
+    {"type" : "do_activation"},
+    {"type" : "conv", "kernel_size" : 3},
+    {"type" : "concat", "axis" : -1, "item_to_concat" : "@:/dense_unit_input"}
+  ],
+  "argument_translation" : {
+    "growth_rate" : "conv/out_size",
+    "kernel_size" : "conv_6/kernel_size",
+    "activation_fn" : "do_activation/activation_fn",
+    "othogonal_init" : "conv/ortho",
+    "bn_center" : "batch_norm_layer/center",
+    "bn_scale" : "batch_norm_layer/scale",
+    "bn_renorm" : "batch_norm_layer/renorm"
+
+  },
+  "default_values" : {
+    "activation_fn" : "tf.nn.relu",
+    "kernel_size" : 3,
+    "orthogonal_init" : true,
+    "bn_center" : true,
+    "bn_renorm" : false
+  }
+}

@@ -5,6 +5,7 @@
 """
 
 import sys
+import time
 
 
 class bcolors:
@@ -25,7 +26,7 @@ class void_printer:
     def __call__(self, message):
         return self
 
-    def __enter__(self):
+    def __enter__(self, timer=False):
         return self
 
     def __exit__(self, type, value, traceback):
@@ -45,15 +46,22 @@ class printProg:
         self.status = [""]
         self.level_count = -1
         self.on_line = False
+        self.timers=[-1]
 
-    def __call__(self, message):
+    def __call__(self, message, timer=False):
         self.message.append(message)
         self.status.append("")
+        if timer:
+            self.timers.append(1)
+        else:
+            self.timers.append(-1)
         return self
 
     def __enter__(self):
         self.level_count += 1
         self.status[-1] = bcolors.OKBLUE + "..." + bcolors.ENDC
+        if self.timers[-1] == 1:
+            self.timers[-1] = time.time()
         if self.on_line:
             sys.stdout.write("\n")
             self.on_line = False
@@ -65,12 +73,19 @@ class printProg:
             self.status[-1] = bcolors.FAIL + "FAILED" + bcolors.ENDC
             self.printError(str(type))
             self.printStatus(True)
+            self.level_count -= 1
+            del self.status[-1]
+            del self.message[-1]
             raise type, value, traceback
-        self.status[-1] = bcolors.OKGREEN + "OK" + bcolors.ENDC
-        self.printStatus(True)
-        self.level_count -= 1
-        del self.status[-1]
-        del self.message[-1]
+        else:
+            self.status[-1] = bcolors.OKGREEN + "OK" + bcolors.ENDC
+            if self.timers[-1] != -1:
+                self.status[-1] +=bcolors.OKGREEN + " in " +  "{0:.2f}".format(time.time() - self.timers[-1]) + "s"+ bcolors.ENDC
+            self.printStatus(True)
+            self.level_count -= 1
+            del self.status[-1]
+            del self.timers[-1]
+            del self.message[-1]
 
     def printInferior(self, f1, f2):
         if f1 < f2 and self.lastPrint % self.printInterval == 0:

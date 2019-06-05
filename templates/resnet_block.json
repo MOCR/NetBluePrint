@@ -1,0 +1,23 @@
+{
+  "structure" : [
+    {"type" : ">:/resnet_block_start"},
+    {"type" : "conv_act"},
+    {"type" : "conv_act", "activation_fn" : null},
+    {"type" : ">:/resnet_block_tmp"},
+    {"type" : "@:/resnet_block_start"},
+    {"type" : "downsize_mean"},
+    {"type" : "resnet_add", "second_input" : "@:/resnet_block_tmp"},
+    {"type" : "do_activation"}
+  ],
+  "argument_translation" : {
+    "out_size" : "conv_act/out_size",
+    "kernel_size" : "conv_act/kernel_size",
+    "reduce_factor" : ["conv_act_2/reduce_factor", "downsize_mean/reduce_factor"],
+    "activation_fn" : ["do_activation/activation_fn", "conv_act_2/activation_fn"]
+  },
+  "default_values" : {
+    "activation_fn" : "tf.nn.relu",
+    "kernel_size" : 3,
+    "reduce_factor" : 1
+  }
+}

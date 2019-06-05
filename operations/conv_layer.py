@@ -8,7 +8,6 @@ Created on Sat Apr  8 14:34:22 2017
 import tensorflow as tf
 import numpy as np
 
-from tensorflow.contrib.layers import batch_norm
 
 def conv(input, layer_id,construct_log, out_size, kernel_size, reduce_factor=1, ortho=False):
     with tf.variable_scope("conv_"+str(layer_id), reuse=construct_log["reuse"]) as scope:
@@ -170,15 +169,6 @@ def mean_var_summary(input, layer_id, construct_log, extra_name=""):
         tf.summary.scalar("mean_"+extra_name, mean)
         tf.summary.scalar("var_"+extra_name, var)
         return input
-def tanh(input, layer_id, construct_log):
-    with tf.variable_scope("tanh_"+str(layer_id), reuse=construct_log["reuse"]):
-        return tf.nn.tanh(input)
-
-def batch_norm_layer(input, layer_id, construct_log, is_training=True):
-    with tf.variable_scope("batch_norm_" + str(layer_id), reuse=construct_log["reuse"])as batch_scope:
-        out = batch_norm(input, is_training=is_training,
-                           center=False, scale=True, scope=batch_scope, fused=True, epsilon=1e-5, decay = 0.9,  renorm=False)
-        return out
 
 def apply_updates(input, layer_id, construct_log, scopes=["self"]):
     updates = []

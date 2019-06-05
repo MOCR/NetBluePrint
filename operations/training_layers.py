@@ -69,6 +69,17 @@ def raw_error(input, layer_id, construct_log, target, rate=1.0):
         tf.summary.scalar("loss", loss)
         construct_log["losses"].append(loss)
         return input
+
+def most_relevant_error(input, layer_id, construct_log, target, rate=1.0):
+    with tf.name_scope("most_relevant_error_layer_" + layer_id):
+        abs_error = tf.abs(input - target)
+        most_relevant = tf.nn.relu(abs_error - tf.stop_gradient(tf.reduce_mean(abs_error)*0.6+tf.reduce_max(abs_error)*0.4))
+        loss = tf.reduce_sum(most_relevant)
+        tf.summary.scalar("loss", loss)
+        construct_log["losses"].append(loss)
+        tf.add_to_collection(tf.GraphKeys.LOSSES, loss)
+        return input
+
 def maxmin_diff(input, layer_id, construct_log, rate=1.0):
     with tf.name_scope("maxmin_diff_"+layer_id):
         loss = tf.reduce_mean(tf.reduce_min(input, axis=[0,1,2])-tf.reduce_max(input, axis=[0,1,2]))*rate
@@ -100,8 +111,9 @@ def dist_loss(input, layer_id, construct_log, num_entries=1000, rate=1.0):
 def compute_gradients(input, layer_id, construct_log, scopes=["self"], losses=[], clear_losses=False, add_regularization=True):
     with tf.name_scope("gradient_layer_"+layer_id):
         loss = sum(construct_log["losses"]+losses)
+        tf.summary.scalar("loss_"+str(layer_id), loss)
         if add_regularization:
-            loss += sum(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))*0.0001
+            loss += sum(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))*1e-5
         l_var = []
         for s in scopes:
             if s == "self":
@@ -117,7 +129,7 @@ def compute_gradients(input, layer_id, construct_log, scopes=["self"], losses=[]
         if clear_losses:
             construct_log["losses"]=[]
         return input
-def trainer(input, layer_id,construct_log, external_gradz=[]):
+def trainer(input, layer_id,construct_log, external_gradz=[], global_step=True, apply_batchnorm=True):
     with tf.name_scope("trainer_"+layer_id):
         merged_gradz = []
         if "gradients" not in construct_log:
@@ -133,15 +145,25 @@ def trainer(input, layer_id,construct_log, external_gradz=[]):
                     merged_gradz.append((tf.reduce_mean(tf.stack(lgw), 0), gradients[i][1]))
                 else:
                     merged_gradz.append(gradients[i])
+        if global_step==True:
+            if "global_step" not in construct_log:
+                global_step = tf.get_variable("global_step", initializer=0)
+                construct_log["global_step"] = global_step
+            else:
+                global_step = construct_log["global_step"]
         gradients=merged_gradz
-        apply_gradients=[construct_log["optimizer"].apply_gradients(gradients)]
-        with tf.control_dependencies(apply_gradients):
+        apply_gradients=[construct_log["optimizer"].apply_gradients(gradients, global_step=global_step)]
+
+        training_ops = apply_gradients
+        if apply_batchnorm:
+            training_ops += tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        with tf.control_dependencies(training_ops):
             return tf.identity(input)
 def l2_norm_layer(input, layer_id, construct_log):
     return tf.nn.l2_normalize(input,-1)
-def set_adam_optimizer(input, layer_id, construct_log, learning_rate=0.0001, beta=0.9):
+def set_adam_optimizer(input, layer_id, construct_log, learning_rate=0.0001, epsilon=1e-8, beta=0.9):
     with tf.variable_scope("adamOptimizer_"+layer_id):
-        construct_log["optimizer"]=tf.train.AdamOptimizer(learning_rate)#, beta)
+        construct_log["optimizer"]=tf.train.AdamOptimizer(learning_rate,epsilon=epsilon)
         return input
 def initializer(input, layer_id, construct_log):
     sess = tf.get_default_session()
@@ -152,3 +174,9 @@ def scalar_summary(input, layer_id, construct_log, name):
     with tf.variable_scope("scalar_summary_"+str(layer_id)):
         tf.summary.scalar(name, input)
         return input
+
+def set_global_step(input, layer_id, construct_log):
+    with tf.variable_scope("global_step_"+str(layer_id)):
+        global_step = tf.get_variable("global_step", initializer=0)
+        construct_log["global_step"] = global_step
+    return input

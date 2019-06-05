@@ -1,0 +1,18 @@
+{
+  "structure" : [
+    {"type" : "conv"},
+    {"type" : "do_activation"}
+  ],
+  "argument_translation" : {
+    "out_size" : "conv_0/out_size",
+    "kernel_size" : "conv_0/kernel_size",
+    "reduce_factor" : "conv_0/reduce_factor",
+    "activation_fn" : "do_activation/activation_fn",
+    "othogonal_init" : "conv_0/ortho"
+  },
+  "default_values" : {
+    "activation_fn" : "tf.nn.relu",
+    "kernel_size" : 3,
+    "orthogonal_init" : true
+  }
+}

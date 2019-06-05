@@ -1,0 +1,17 @@
+{
+  "structure" : [
+    {"type" : "conv_act_no_norm", "out_size" : 16, "activation_fn" : null},
+    {"type" : "dense_block", "unit_number" : 2, "out_size" : 128},
+    {"type" : "dense_block", "unit_number" : 2, "out_size" : 128},
+    {"type" : "dense_block", "unit_number" : 4, "out_size" : 256},
+    {"type" : "dense_block", "unit_number" : 6, "out_size" : 256},
+    {"type" : "dense_block", "unit_number" : 18, "out_size" : 396},
+    {"type" : "dense_block", "unit_number" : 6, "out_size" : 512},
+    {"type" : "flatten"},
+    {"type" : "dropout"},
+    {"type" : "fully_connected"}
+  ],
+  "argument_translation" : {
+    "out_size" : "fully_connected/out"
+  }
+}

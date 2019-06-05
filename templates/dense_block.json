@@ -1,0 +1,17 @@
+{
+  "structure" : [
+    {"type" : "block_repeater", "structure" : "dense_unit"},
+    {"type" : "conv", "kernel_size" : 1}
+  ],
+  "argument_translation" : {
+    "growth_rate" : "block_repeater/growth_rate",
+    "unit_number" : "block_repeater/times",
+    "out_size" : "conv_1/out_size",
+    "reduce_factor" : "conv_1/reduce_factor"
+
+  },
+  "default_values" : {
+    "reduce_factor" : 2,
+    "growth_rate" : 32
+  }
+}

@@ -2,8 +2,10 @@ import tensorflow as tf
 from tensorflow.contrib.staging import StagingArea as staging_area
 
 def load_dataset(input, layer_id,construct_log, dataset, batchsize, *args, **kwargs):
-    construct_log["dataset"]=construct_log["awailable_datasets"][dataset](batchsize,*args, **kwargs)
-    construct_log["data_inputs"]=construct_log["dataset"].get_datadict()
+    with tf.variable_scope("dataset_" + layer_id):
+        with tf.device("/cpu:0"):
+            construct_log["dataset"]=construct_log["awailable_datasets"][dataset](batchsize,*args, **kwargs)
+            construct_log["data_inputs"]=construct_log["dataset"].get_datadict()
     return input
 
 def bufferize_dataset(input, layer_id, construct_log):

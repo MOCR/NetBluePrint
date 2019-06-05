@@ -1,0 +1,25 @@
+{
+  "structure" : [
+    {"type" : "conv_act_no_norm", "out_size" : 16},
+    {"type" : "resnet_block", "out_size" : 16},
+    {"type" : "resnet_block", "out_size" : 16},
+    {"type" : "resnet_block", "out_size" : 32, "reduce_factor" : 2},
+    {"type" : "resnet_block", "out_size" : 32},
+    {"type" : "resnet_block", "out_size" : 64, "reduce_factor" : 2},
+    {"type" : "resnet_block", "out_size" : 64},
+    {"type" : "resnet_block", "out_size" : 128, "reduce_factor" : 2},
+    {"type" : "resnet_block", "out_size" : 128},
+    {"type" : "resnet_block", "out_size" : 256, "reduce_factor" : 2},
+    {"type" : "resnet_block", "out_size" : 256},
+    {"type" : "resnet_block", "out_size" : 256, "reduce_factor" : 2},
+    {"type" : "resnet_block", "out_size" : 256},
+    {"type" : "resnet_block", "out_size" : 512, "reduce_factor" : 2},
+    {"type" : "resnet_block", "out_size" : 512},
+    {"type" : "flatten"},
+    {"type" : "fully_connected", "init" : "SMALL"}
+
+  ],
+  "argument_translation" : {
+    "out_size" : "fully_connected/out"
+  }
+}
