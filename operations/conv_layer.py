@@ -160,29 +160,6 @@ def transpose_conv1D(input, layer_id,construct_log, out_size, kernel_size, expan
          output=tf.nn.tanh(output)
          construct_log["scopes"].append(scope)
          return output
-         
-def mean_var_summary(input, layer_id, construct_log, extra_name=""):
-    with tf.variable_scope("mv_summay_"+str(layer_id), reuse=construct_log["reuse"]):
-        mean_f = tf.reduce_mean(input, axis=-1)
-        mean = tf.reduce_mean(mean_f)
-        var = tf.reduce_mean(tf.square(mean_f-mean))
-        tf.summary.scalar("mean_"+extra_name, mean)
-        tf.summary.scalar("var_"+extra_name, var)
-        return input
 
-def apply_updates(input, layer_id, construct_log, scopes=["self"]):
-    updates = []
-    if type(scopes) != list:
-        scopes = [scopes]
-    for s in scopes:
-        if s == "self":
-            updates += tf.get_collection(tf.GraphKeys.UPDATE_OPS, scope=construct_log["main_scope"].name)
-        elif type(s) is str:
-            updates += tf.get_collection(tf.GraphKeys.UPDATE_OPS, scope=construct_log["network_scope"][s].name)
-        else:
-            updates += tf.get_collection(tf.GraphKeys.UPDATE_OPS, scope=s.name)
-    with tf.name_scope("apply_updates"):
-        with tf.control_dependencies(updates):
-            return tf.identity(input)
 
 

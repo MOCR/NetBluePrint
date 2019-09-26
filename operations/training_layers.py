@@ -68,13 +68,23 @@ def initializer(input, layer_id, construct_log):
     sess.run(tf.global_variables_initializer())
     return input
 
-def scalar_summary(input, layer_id, construct_log, name):
-    with tf.variable_scope("scalar_summary_"+str(layer_id)):
-        tf.summary.scalar(name, input)
-        return input
-
 def set_global_step(input, layer_id, construct_log):
     with tf.variable_scope("global_step_"+str(layer_id)):
         global_step = tf.get_variable("global_step", initializer=0)
         construct_log["global_step"] = global_step
     return input
+
+def apply_updates(input, layer_id, construct_log, scopes=["self"]):
+    updates = []
+    if type(scopes) != list:
+        scopes = [scopes]
+    for s in scopes:
+        if s == "self":
+            updates += tf.get_collection(tf.GraphKeys.UPDATE_OPS, scope=construct_log["main_scope"].name)
+        elif type(s) is str:
+            updates += tf.get_collection(tf.GraphKeys.UPDATE_OPS, scope=construct_log["network_scope"][s].name)
+        else:
+            updates += tf.get_collection(tf.GraphKeys.UPDATE_OPS, scope=s.name)
+    with tf.name_scope("apply_updates"):
+        with tf.control_dependencies(updates):
+            return tf.identity(input)
