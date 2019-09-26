@@ -7,8 +7,9 @@ Created on Thuesday May 31 21:38:32 2018
 
 
 class dataset(object):
-    def __init__(self, batchsize):
+    def __init__(self, construct_log, batchsize):
         self.data_dict = {}
+        self.construct_log = construct_log
         self.batchsize = batchsize
 
     def __getitem__(self, key):

@@ -2,16 +2,17 @@
   "structure" : [
     {"type" : "conv"},
     {"type" : "batch_norm_layer"},
-    {"type" : "do_activation"}
+    {"type" : "do_activation"},
+    {"type" :  "dropout", "rate" :  0.2}
   ],
   "argument_translation" : {
-    "out_size" : "conv_0/out_size",
-    "kernel_size" : "conv_0/kernel_size",
-    "reduce_factor" : "conv_0/reduce_factor",
+    "out_size" : "conv/out_size",
+    "kernel_size" : "conv/kernel_size",
+    "reduce_factor" : "conv/reduce_factor",
     "activation_fn" : "do_activation/activation_fn",
-    "othogonal_init" : "conv_0/ortho",
-    "bn_center" : "batch_norm_layer_1/center",
-    "bn_renorm" : "batch_norm_layer_1/renorm"
+    "othogonal_init" : "conv/ortho",
+    "bn_center" : "batch_norm_layer/center",
+    "bn_renorm" : "batch_norm_layer/renorm"
 
   },
   "default_values" : {

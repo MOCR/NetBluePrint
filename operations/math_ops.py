@@ -26,3 +26,8 @@ def resnet_add(input, layer_id, construct_log, second_input):
             second_input = tf.nn.conv2d(second_input, w, (1, 1, 1, 1), "SAME")
 
         return input + second_input
+
+def add_random_noise(input, layer_id, construct_log, stddev=0.01, mean=0.0):
+    with tf.variable_scope("add_random_noise_" + str(layer_id)):
+        noise = tf.random.normal(shape=tf.shape(input), stddev=stddev, mean=mean)
+        return input+noise

@@ -4,7 +4,7 @@ from tensorflow.contrib.staging import StagingArea as staging_area
 def load_dataset(input, layer_id,construct_log, dataset, batchsize, *args, **kwargs):
     with tf.variable_scope("dataset_" + layer_id):
         with tf.device("/cpu:0"):
-            construct_log["dataset"]=construct_log["awailable_datasets"][dataset](batchsize,*args, **kwargs)
+            construct_log["dataset"]=construct_log["awailable_datasets"][dataset](construct_log, batchsize,*args, **kwargs)
             construct_log["data_inputs"]=construct_log["dataset"].get_datadict()
     return input
 
@@ -45,16 +45,17 @@ def stage_dataset(input, layer_id,construct_log):
         shapes=[]
         for t in construct_log["data_inputs"].keys():
             tens = construct_log["data_inputs"][t]
-            dtypes.append(tens.dtype)
-            tensors.append(tens)
-            names.append(t)
-            shapes.append(tens.get_shape().as_list())
+            if type(tens) == tf.Tensor:
+                dtypes.append(tens.dtype)
+                tensors.append(tens)
+                names.append(t)
+                shapes.append(tens.get_shape().as_list())
         stager=staging_area(dtypes, capacity=1, shapes=shapes)
         construct_log["feed_stager"]=stager.put(tensors)
         sess = tf.get_default_session()
         sess.run(construct_log["feed_stager"])
         staged_tensors=stager.get()
-        construct_log["data_inputs"] = {}
+        #construct_log["data_inputs"] = {}
         for i in range(len(staged_tensors)):
             construct_log["data_inputs"][names[i]]=staged_tensors[i]
         return input

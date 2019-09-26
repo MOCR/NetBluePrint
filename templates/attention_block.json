@@ -1,0 +1,18 @@
+{
+  "structure" : [
+    {"type" : "conv_act"},
+    {"type" : ">:/attention_block_start"},
+    {"type" : "resnet_block"},
+    {"type" : ">:/attention_block_trunk"},
+    {"type" : "@:/attention_block_start"},
+    {"type" : "attention_mask"},
+    {"type" : "apply_attention_mask", "trunk" : "@:/attention_block_trunk"}
+  ],
+  "argument_translation" : {
+    "kernel_size" : "conv_act/kernel_size",
+    "out_size" : ["conv_act/out_size", "resnet_block/out_size", "attention_mask/out_size"]
+  },
+  "default_values" : {
+    "kernel_size" : 3
+  }
+}

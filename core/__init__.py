@@ -115,7 +115,18 @@ template_files=[]
 for t_loc in templates_locations:
     template_files += [t_loc+ f for f in listdir(t_loc) if isfile(join(t_loc, f))]
 
-### BLOCK FILES READING AND CONSTRUCTION OF BLOCK OPERATIONS ### 
+### BLOCK FILES READING AND CONSTRUCTION OF BLOCK OPERATIONS ###
+
+def recursive_unicode_convertion(to_convert):
+    if type(to_convert) == list:
+        for i in range(len(to_convert)):
+            to_convert[i] = recursive_unicode_convertion(to_convert[i])
+    elif type(to_convert) == dict:
+        for k in to_convert.keys():
+            to_convert[k] = recursive_unicode_convertion(to_convert[k])
+    elif isinstance(to_convert, unicode):
+        to_convert = to_convert.encode('ascii', 'ignore')
+    return to_convert
 
 for block in template_files:
     try:
@@ -127,12 +138,13 @@ for block in template_files:
     block_struct = []
     name = block.split("/")[-1].split(".")[0]
     for l in blockConf["structure"]:
-        type_ = l["type"]
-        del l["type"]
-        for k in l.keys():
-            if isinstance(l[k], unicode):
-                l[k] = l[k].encode('ascii','ignore')
-        block_struct.append([type_, l])
+        l = recursive_unicode_convertion(l)
+        if type(l) is dict:
+            type_ = l["type"]
+            del l["type"]
+            block_struct.append([type_, l])
+        else:
+            block_struct.append(l)
     at = {}
     default_parameters={}
     if "argument_translation" in blockConf:
@@ -189,6 +201,22 @@ for attr in dir(tf.nn):
             raise Exception("TF wrapping error : Unavailable function name")
         else:
             operations["tf.nn."+attr] = tf_function_wrapper(obj, "nn."+attr)
+
+for attr in dir(tf.image):
+    obj = getattr(tf.image, attr)
+    if isinstance(obj, types.FunctionType):
+        if "tf.image."+attr in operations:
+            raise Exception("TF wrapping error : Unavailable function name")
+        else:
+            operations["tf.image."+attr] = tf_function_wrapper(obj, "image."+attr)
+
+for attr in dir(tf.math):
+    obj = getattr(tf.math, attr)
+    if isinstance(obj, types.FunctionType):
+        if "tf.math."+attr in operations:
+            raise Exception("TF wrapping error : Unavailable function name")
+        else:
+            operations["tf.math."+attr] = tf_function_wrapper(obj, "math."+attr)
 
 #scanning awailable pretrained filters
 

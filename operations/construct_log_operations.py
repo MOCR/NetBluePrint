@@ -9,3 +9,4 @@ def clear_field(input, layer_id, construct_log, field_name):
     return input
 def no_op(input, layer_id, construct_log):
     return input
+

@@ -1,0 +1,26 @@
+{
+  "structure" : [
+    {"type" : "conv_act", "reduce_factor" : 2, "kernel_size" : 3},
+    {"type" : "resnet_block", "kernel_size" : 3},
+    {"type" : ">:/skip_1"},
+    {"type" : "conv_act", "reduce_factor" : 2, "kernel_size" : 3},
+    {"type" : "conv_act", "kernel_size" : 3},
+    {"type" : "conv_act", "kernel_size" : 3},
+    {"type" : "interpolation", "expand_Size" : 2},
+    {"type" : "resnet_add", "second_input" : "@:/skip_1"},
+    {"type" : "resnet_block", "kernel_size" : 3},
+    {"type" : "interpolation", "expand_Size" : 2},
+    {"type" : "conv_act", "kernel_size" : 1},
+    {"type" : "conv_act", "kernel_size" : 1},
+    {"type" : "tf.nn.sigmoid"}
+  ],
+  "argument_translation" : {
+    "out_size" : ["conv_act/out_size", "resnet_block/out_size"],
+    "kernel_size" : "conv_act/kernel_size",
+    "activation_fn" : ["do_activation/activation_fn", "conv_act_2/activation_fn"]
+  },
+  "default_values" : {
+    "activation_fn" : "tf.nn.relu",
+    "kernel_size" : 3
+  }
+}

@@ -16,14 +16,14 @@ def fully_connected(input, layer_id,construct_log, out, outshape=None, function=
         if init=="ORTHO":
             initializer = tf.orthogonal_initializer()
         elif init=="SMALL":
-            initializer=tf.random_uniform_initializer(-0.0003,0.0003)#tf.random_normal_initializer(stddev=0.00002)
+            initializer=tf.random_normal_initializer(stddev = 0.001)#tf.random_normal_initializer(stddev=0.00002)
         elif init=="FAN":
             initializer=tf.random_uniform_initializer(-1/math.sqrt(input.get_shape().as_list()[-1]), 1/math.sqrt(input.get_shape().as_list()[-1]))
         w = tf.get_variable("weights", [input.get_shape()[-1], out], initializer=initializer, regularizer=tf.nn.l2_loss)
         construct_log["weight"].append(w)
         output = tf.matmul(input, w)
         if bias:
-            b = tf.get_variable("bias", [out], initializer=tf.random_uniform_initializer(-0.01,0.01), regularizer=tf.nn.l2_loss)
+            b = tf.get_variable("bias", [out], initializer=tf.zeros_initializer(), regularizer=tf.nn.l2_loss)
             output += b
         if function == "relu":
             output=tf.nn.relu(output)
@@ -38,6 +38,8 @@ def fully_connected(input, layer_id,construct_log, out, outshape=None, function=
 
 def flatten(input, layer_id,construct_log):
     shape = input.get_shape().as_list()
+    if shape[0] == None:
+        shape[0] = -1
     size = 1
     for dim in shape[1:]:
         size *=dim

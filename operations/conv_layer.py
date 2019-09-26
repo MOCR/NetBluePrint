@@ -18,7 +18,7 @@ def conv(input, layer_id,construct_log, out_size, kernel_size, reduce_factor=1, 
         w = tf.get_variable("weights", [kernel_size, kernel_size, input.get_shape()[-1], out_size], initializer=initializer, regularizer=tf.nn.l2_loss)
         output = tf.nn.conv2d(input,w, (1,reduce_factor,reduce_factor,1), "SAME")
         construct_log["weight"].append(w)
-        b = tf.get_variable("bias", [out_size], initializer=tf.constant_initializer(0.0), regularizer=tf.nn.l2_loss)
+        b = tf.get_variable("bias", [1, 1, 1, out_size], initializer=tf.constant_initializer(0.0), regularizer=tf.nn.l2_loss)
         output+=b
         construct_log["scopes"].append(scope)
         return output
@@ -68,17 +68,17 @@ def transpose_conv(input, layer_id,construct_log, out_size, kernel_size, expand_
             input_Size = input.get_shape().as_list()
             #input = transpose_conv(input, 0,construct_log, input_Size[-1], expand_Size, expand_Size, preResize=False, ortho=True)
             resize = [int(input_Size[1])*expand_Size,int(input_Size[2])*expand_Size]
-            #input = tf.image.resize_bilinear(input, resize)
-            input = tf.image.resize_nearest_neighbor(input, resize)
+            input = tf.image.resize_bilinear(input, resize)
+            # input = tf.image.resize_nearest_neighbor(input, resize)
             # input += tf.random_normal(tf.shape(input), stddev=0.1)
             expand_Size = 1
         if ortho:
             initializer = tf.orthogonal_initializer()
         else:
-            initializer=tf.random_normal_initializer(stddev=0.02)
+            initializer=tf.random_normal_initializer(stddev=0.05)
         w = tf.get_variable("weights", [kernel_size, kernel_size,out_size, input.get_shape()[-1]], initializer=initializer, regularizer=tf.nn.l2_loss)       
         construct_log["weight"].append(w)
-        b = tf.get_variable("bias", [out_size], initializer=tf.constant_initializer(0.0), regularizer=tf.nn.l2_loss)        
+        b = tf.get_variable("bias", [1, 1, 1, out_size], initializer=tf.constant_initializer(0.0), regularizer=tf.nn.l2_loss)
         input_Size = input.get_shape()#tf.shape(input) 
         #print input.get_shape()
         outsize = [tf.shape(input)[0], int(input_Size[1])*expand_Size,int(input_Size[2])*expand_Size, out_size]

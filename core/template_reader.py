@@ -4,8 +4,12 @@ from NetBluePrint.core import builder
 
 
 def create_block_operation(structure, name, argument_translation={}, default_parameters={}):
-    def created_block(input, layer_id, construct_log, **kw):
+    def created_block(input, layer_id, construct_log, *args, **kw):
         # print kw
+        if len(args)!=0:
+            if "args" not in list(kw.keys()):
+                kw["args"] = []
+            kw["args"] = args + kw["args"]
         for def_arg in default_parameters.keys():
             if def_arg not in kw.keys():
                 kw[def_arg] = default_parameters[def_arg]

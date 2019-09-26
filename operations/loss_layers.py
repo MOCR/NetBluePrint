@@ -8,7 +8,7 @@ def additive_margin(input, layer_id, construct_log, labels, num_class,m=0.3,s=30
         weights_init=tf.random.normal(shape=[num_class, embedding_size], stddev=0.01)
         weights = tf.get_variable("centroids", initializer=weights_init)
         weights_normed = tf.nn.l2_normalize(weights, axis = -1)
-        weights_normed_transposed = tf.stop_gradient(tf.transpose(weights_normed) + tf.transpose(weights_normed)*0.1) + tf.transpose(weights_normed)*0.1
+        weights_normed_transposed = tf.transpose(weights_normed)
 
         normed_input = tf.nn.l2_normalize(input, axis=-1)
         cos = tf.matmul(normed_input, weights_normed_transposed)
@@ -91,4 +91,129 @@ def embedding_norm_loss(input, layer_id, construct_log, weight=1.0):
         loss = tf.reduce_mean(tf.abs(norm - 1.0)) * weight
         tf.summary.scalar("loss", loss)
         construct_log["losses"].append(loss)
+        return input
+
+def embedding_dist_loss(input, layer_id, construct_log, weight=1.0):
+    with tf.name_scope("embedding_dist_loss" + layer_id):
+        loss = tf.reduce_mean(tf.matmul(input, tf.transpose(input))) * weight
+        tf.summary.scalar("loss", loss)
+        construct_log["losses"].append(loss)
+        return input
+
+
+def local_feature_maximizer(input, layer_id, construct_log):
+    with tf.name_scope("local_feature_maximizer_" + layer_id):
+        feature_flat = tf.reshape(construct_log["weight"][-1], [-1, int(input.get_shape()[-1])])
+        feature_norm = tf.nn.l2_normalize(feature_flat, 0)
+
+        cos_features = tf.matmul(tf.transpose(feature_norm), feature_norm)  # - np.identity(input.get_shape()[-1]
+        cos_features = tf.nn.relu(cos_features)
+        # tf.summary.scalar("cos_feature", tf.reduce_mean(cos_features))
+
+        cos_features_m = tf.reduce_mean(-(cos_features - 1.0), 0)
+
+        tf.summary.scalar("cos_feature_m", tf.reduce_mean(cos_features_m))
+
+        input_flat = tf.reshape(input, [-1, int(input.get_shape()[-1])])
+        feature_usage = (tf.reduce_max(tf.abs(input_flat), 0) - tf.reduce_min(tf.abs(input_flat), 0)) / (
+                    tf.reduce_max(tf.abs(input_flat),
+                                  0) + 0.0001)  # (tf.abs(input_flat),0)tf.reduce_mean(tf.abs(input_flat),0)/(tf.reduce_max(tf.abs(input_flat),0)+0.0001)
+        # input = input/tf.norm(feature_flat,axis=0)
+
+        loss = -tf.reduce_mean(cos_features_m * feature_usage)
+
+        tf.summary.scalar("loss", loss)
+        construct_log["losses"].append(loss)
+
+        tf.summary.scalar("feature_usage", tf.reduce_mean(feature_usage))
+
+        var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=construct_log["scopes"][-1].name)
+        if len(construct_log["scopes"]) > 1:
+            var_list += tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=construct_log["scopes"][-2].name)
+        gradz = construct_log["optimizer"].compute_gradients(loss, var_list=var_list)
+        construct_log["gradients"] += gradz
+
+        return input
+
+
+def softmax_loss(input, layer_id, construct_log, labels):
+    with tf.name_scope("softmax_layer_" + layer_id):
+        if type(labels) is float:
+            labels = tf.ones([tf.shape(input)[0]]) * labels
+        # cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=input))
+        th = tf.nn.sigmoid(input)
+        cross_entropy = tf.reduce_mean(-labels * tf.log1p(th) - (1.0 - labels) * tf.log1p(1.0 - th))
+        tf.summary.scalar("loss", cross_entropy)
+        construct_log["losses"].append(cross_entropy)
+        return input
+
+
+def squared_error(input, layer_id, construct_log, target, rate=1.0):
+    with tf.name_scope("squared_error_layer_" + layer_id):
+        th = tf.nn.sigmoid(input)
+        loss = tf.reduce_mean(tf.abs(th - target)) * rate
+        tf.summary.scalar("loss", loss)
+        construct_log["losses"].append(loss)
+        return input
+
+
+def squared_error_1(input, layer_id, construct_log, target, rate=1.0):
+    with tf.name_scope("squared_error_1_layer_" + layer_id):
+        loss = tf.reduce_mean(tf.abs(input - target)) * rate
+        tf.summary.scalar("loss", loss)
+        construct_log["losses"].append(loss)
+        construct_log["sq_loss"]=loss
+        return input
+
+
+def raw_error(input, layer_id, construct_log, target, rate=1.0):
+    with tf.name_scope("raw_error_layer_" + layer_id):
+        loss = tf.reduce_mean(tf.reduce_max(tf.abs(input - target), axis=[1, 2])) * 0.0 * rate + tf.reduce_mean(
+            tf.abs(input - target)) * rate
+        tf.summary.scalar("loss", loss)
+        construct_log["losses"].append(loss)
+        return input
+
+
+def most_relevant_error(input, layer_id, construct_log, target, rate=1.0):
+    with tf.name_scope("most_relevant_error_layer_" + layer_id):
+        abs_error = tf.abs(input - target)
+        most_relevant = tf.nn.relu(
+            abs_error - tf.stop_gradient(tf.reduce_mean(abs_error) * 0.6 + tf.reduce_max(abs_error) * 0.4))
+        loss = tf.reduce_sum(most_relevant)
+        tf.summary.scalar("loss", loss)
+        construct_log["losses"].append(loss)
+        tf.add_to_collection(tf.GraphKeys.LOSSES, loss)
+        return input
+
+
+def maxmin_diff(input, layer_id, construct_log, rate=1.0):
+    with tf.name_scope("maxmin_diff_" + layer_id):
+        loss = tf.reduce_mean(tf.reduce_min(input, axis=[0, 1, 2]) - tf.reduce_max(input, axis=[0, 1, 2])) * rate
+        tf.summary.scalar("loss", loss)
+        construct_log["losses"].append(loss)
+        return input
+
+
+def l2_loss(input, layer_id, construct_log, scopes=["self"], rate=0.1):
+    with tf.name_scope("l2_loss_layer_" + layer_id):
+        loss_l = []
+        for s in scopes:
+            if s == "self":
+                l_var = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=construct_log["network_scope"].name)
+            else:
+                l_var = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=s.name)
+            for v in l_var:
+                loss_l.append(tf.nn.l2_loss(v))
+        construct_log["losses"].append(sum(loss_l) * rate)
+        return input
+
+
+def dist_loss(input, layer_id, construct_log, num_entries=1000, rate=1.0):
+    with tf.name_scope("dist_loss_" + layer_id):
+        flatten = tf.reshape(input, [-1, input.get_shape().as_list()[-1]])
+        selected = tf.gather(flatten, tf.random_uniform([num_entries], maxval=tf.shape(flatten)[0], dtype=tf.int32))
+        loss = tf.reduce_mean(tf.nn.relu(tf.matmul(selected, tf.transpose(selected))))
+        construct_log["losses"].append(loss * rate)
+        tf.summary.scalar("loss", loss)
         return input

@@ -1,13 +1,22 @@
 {
   "structure" : [
     {"type" : "transpose_conv"},
-    {"type" : "batch_norm_layer"},
-    {"type" : "tf.nn.relu"}
+//    {"type" : "batch_norm_layer"},
+    {"type" : "tf.nn.leaky_relu"}
   ],
   "argument_translation" : {
-    "out_size" : "transpose_conv_0/out_size",
-    "kernel_size" : "transpose_conv_0/kernel_size",
-    "expand_Size" : "transpose_conv_0/expand_Size"
+    "out_size" : "transpose_conv/out_size",
+    "kernel_size" : "transpose_conv/kernel_size",
+    "expand_Size" : "transpose_conv/expand_Size",
+    "bn_center" : "batch_norm_layer/center",
+    "bn_renorm" : "batch_norm_layer/renorm"
 
+
+  },
+  "default_values" : {
+    "transpose_conv/ortho" : false,
+    "transpose_conv/preResize" : true,
+    "bn_center" : false,
+    "bn_renorm" : false
   }
 }

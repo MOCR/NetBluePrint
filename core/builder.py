@@ -17,6 +17,19 @@ awailable_filters={}
 LAYER_COUNT=0
 OP_COUNT=1
 
+def path_argument_translation(argument, construct_log, current_layer):
+    if argument.startswith("@:/"):
+        var_path = argument.split("/")[1:]
+        node = construct_log
+        for vp in var_path:
+            if type(node) is list:
+                vp = int(vp)
+            node = node[vp]
+            argument = node
+    elif argument == "@input":
+        argument = current_layer
+    return argument
+
 def create_workflow(input,
                     configuration,
                     network_name,
@@ -81,7 +94,16 @@ def create_workflow(input,
         construct_log = parent_log
         type_n = "Local"
     layer_numbers={}
-    layer_numerotation = LAYER_COUNT
+    layer_numerotation = OP_COUNT
+
+    def translate_arguments(c, construct_log, current_layer):
+        for ic in range(len(c[1])):
+            if type(c[1][ic]) is str:
+                c[1][ic] = path_argument_translation(c[1][ic], construct_log, current_layer)
+        for ic in c[2].keys():
+            if type(c[2][ic]) is str:
+                c[2][ic] = path_argument_translation(c[2][ic], construct_log, current_layer)
+
     with construct_log["tf_session"].as_default():
         with construct_log["printer"](type_n + " creation : " + network_name, timer=(type_n=="Main")):
             with tf.variable_scope(network_name if net_scope == None else net_scope, reuse=reuse) as scope:
@@ -91,7 +113,9 @@ def create_workflow(input,
                 construct_log["local_scope"] = scope
                 if type(configuration) is not list:
                     configuration=[configuration]
-                for i, c in enumerate(configuration):
+                i=0
+                while i < len(configuration):
+                    c = configuration[i]
                     if type(c) is not list:
                         c=[c]
                     c = list(c)
@@ -130,15 +154,36 @@ def create_workflow(input,
                             if vp not in node:
                                 node[vp] = {}
                             node = node[vp]
-                        node[final] = current_layer
+                        if final.endswith(":[]"):
+                            final = final.split(":")[0]
+                            if final not in node:
+                                node[final]=[]
+                            node[final].append(current_layer)
+                        else:
+                            node[final] = current_layer
                         opp = None
+                    elif c[0] == "if":
+                        translate_arguments(c, construct_log, current_layer)
+                        condition = c[2]["condition"] if "condition" in list(c[2].keys()) else c[1][0]
+                        if condition:
+                            additional_structure = c[2]["structure"] if "structure" in list(c[2].keys()) else c[1][-1]
+                            if type(additional_structure) is not list:
+                                additional_structure=[additional_structure]
+                            configuration = configuration[:i+1]+additional_structure+configuration[i+1:]
                     else:
                         raise Exception("Unknown operation : " + c[0])
                     if opp != None:
+                        if opp not in layer_numbers:
+                            layer_numbers[opp]=0
+                        if layer_numerotation == OP_COUNT:
+                            layer_id = str(layer_numbers[opp])
+                        else:
+                            layer_id = str(i)
+                        layer_numbers[opp]+=1
                         for v_name in list(default_dict.keys()):
                             split_v_name = v_name.split("/", 1)
                             if len(split_v_name) > 1:
-                                if split_v_name[0] == c[0] or split_v_name[0] == c[0] + "_" + str(i):
+                                if split_v_name[0] == c[0] or split_v_name[0] == c[0] + "_" + str(layer_id):
                                     c[2][split_v_name[1]] = default_dict[v_name]
                             else:
                                 add_var = False
@@ -155,29 +200,14 @@ def create_workflow(input,
                                 if add_var:
                                     if v_name not in c[2]:
                                         c[2][v_name] = default_dict[v_name]
-                        for ic in c[2].keys():
-                            if type(c[2][ic]) is str:
-                                if c[2][ic].startswith("@:/"):
-                                    var_path = c[2][ic].split("/")[1:]
-                                    node = construct_log
-                                    for vp in var_path:
-                                        if type(node) is list:
-                                            vp = int(vp)
-                                        node = node[vp]
-                                    c[2][ic] = node
-                                elif c[2][ic] == "@input":
-                                    c[2][ic] = current_layer
+
+                        translate_arguments(c, construct_log, current_layer)
+
                         construct_log["logger"].register_opp(opp)
-                        if opp not in layer_numbers:
-                            layer_numbers[opp]=0
-                        if layer_numerotation == OP_COUNT:
-                            layer_id= str(layer_numbers[opp])
-                        else:
-                            layer_id = str(i)
-                        layer_numbers[opp]+=1
                         current_layer = opp(current_layer, layer_id, construct_log, *c[1], **c[2])
                         construct_log["features"].append(current_layer)
-                construct_log["local_scope"] = scope
+                    construct_log["local_scope"] = scope
+                    i+=1
     if type_n == "Main":
         construct_log["logger"].save_header()
 

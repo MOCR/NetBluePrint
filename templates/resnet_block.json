@@ -2,12 +2,12 @@
   "structure" : [
     {"type" : ">:/resnet_block_start"},
     {"type" : "conv_act"},
-    {"type" : "conv_act", "activation_fn" : null},
+    {"type" : "conv_act"},
     {"type" : ">:/resnet_block_tmp"},
     {"type" : "@:/resnet_block_start"},
     {"type" : "downsize_mean"},
-    {"type" : "resnet_add", "second_input" : "@:/resnet_block_tmp"},
-    {"type" : "do_activation"}
+    {"type" : "resnet_add", "second_input" : "@:/resnet_block_tmp"}
+
   ],
   "argument_translation" : {
     "out_size" : "conv_act/out_size",

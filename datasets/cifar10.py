@@ -12,8 +12,8 @@ from NetBluePrint.core.dataset import dataset
 import numpy as np
 
 class cifar10(dataset):
-    def __init__(self, batchsize = 64, resize_dim=None):
-        super(cifar10, self).__init__(batchsize)
+    def __init__(self,construct_log, batchsize = 64, resize_dim=None):
+        super(cifar10, self).__init__(construct_log, batchsize)
         with tf.name_scope("cifar10"):
             def get_batch(size):
                 x = cifar.nextBatch(size)
