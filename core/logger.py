@@ -60,6 +60,7 @@ class logger:
 
         self.structure_blueprint = {}
         self.structure_blueprint["MAIN"] = struct
+        self.data = {}
 
 
         # pynvml.nvmlInit()
@@ -93,6 +94,10 @@ class logger:
         with tf.control_dependencies([handler]):
             return tf.identity(input)
 
+    def addData(self, **kwargs):
+        for key in list(kwargs.keys()):
+            self.data[key] = kwargs[key]
+
     def launch_saving_thread(self):
         def saver():
             while self.Running_thread:
@@ -110,7 +115,7 @@ class logger:
 
     def save_header(self):
         with open(self.log_path + "header_"+str(time.time()) + ".pkl", "wb") as f:
-            pickle.dump({ "structure_blueprint" : self.structure_blueprint}, f)
+            pickle.dump({ "structure_blueprint" : self.structure_blueprint, "data" : self.data}, f)
         with open(self.log_path + "header_"+str(time.time()) + ".json", "wb") as f:
             json.dump({ "structure_blueprint" : self.structure_blueprint}, f, indent=4)
 
