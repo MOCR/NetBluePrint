@@ -17,27 +17,39 @@ import numpy as np
 if "RUN_LOG_PATH" in os.environ:
     path = os.environ["RUN_LOG_PATH"]
 else:
-    path = "./"
+    path = "./logs/"
 
 if "RUN_CHECKPOINT_PATH" in os.environ:
     model_path = os.environ["RUN_CHECKPOINT_PATH"]
 else:
-    model_path = "./"
+    model_path = "./models/"
 
 #gpu = pynvml.nvmlDeviceGetHandleByIndex(0)
 
 class logger:
     def __init__(self, name, construct_log, struct, restore=True, run_to_restore=-1):
-        runs = glob.glob(path+name+"_*/")
-        run_number = len(runs)
-        if restore and run_number>0:
-            if run_to_restore!=-1 and run_to_restore<run_number:
-                run_number=run_to_restore
+        runs = glob.glob(model_path + name + "_*/")
+        runs_by_numbers = {}
+        for r in runs:
+            number = int(r.split("/")[-2].split("_")[-1])
+            runs_by_numbers[number] = r
+        i = 0
+        while i in runs_by_numbers:
+            i += 1
+        run_number = i
+        if run_to_restore == -1:
+            if restore and run_number > 0:
+                if run_to_restore == -1 or run_to_restore >= run_number:
+                    run_number = run_number - 1
+                else:
+                    run_number = run_to_restore
+                self.restore = True
             else:
-                run_number = run_number - 1
-            self.restore = True
+                self.restore = False
         else:
-            self.restore = False
+            run_number = run_to_restore
+            self.restore = True
+        self.run_number = run_number
         self.log_path = path+name+"_"+str(run_number)+"/"
         self.model_path = model_path+name+"_"+str(run_number)+"/"
         try:
