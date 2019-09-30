@@ -170,6 +170,10 @@ def create_workflow(input,
                             if type(additional_structure) is not list:
                                 additional_structure=[additional_structure]
                             configuration = configuration[:i+1]+additional_structure+configuration[i+1:]
+                    elif c[0].startswith("&:"):
+                        if c[0] not in default_dict:
+                            raise Exception("Unknown operation alias : " + c[0])
+                        opp = operations[default_dict[c[0]]]
                     else:
                         raise Exception("Unknown operation : " + c[0])
                     if opp != None:
@@ -193,7 +197,8 @@ def create_workflow(input,
                                 except:
                                     pass
                                 try:
-                                    if opp.__code__.co_varnames.index("kw") <= opp.__code__.co_argcount:
+                                    if ("kw" in opp.__code__.co_varnames and "args" in opp.__code__.co_varnames)\
+                                        or (opp.__code__.co_varnames.index("kw") <= opp.__code__.co_argcount):
                                         add_var = True
                                 except:
                                     pass
@@ -204,6 +209,9 @@ def create_workflow(input,
                         translate_arguments(c, construct_log, current_layer)
 
                         construct_log["logger"].register_opp(opp)
+                        # print(default_dict)
+                        # print(opp.__code__.co_varnames, opp.__code__.co_argcount)
+                        # print(c)
                         current_layer = opp(current_layer, layer_id, construct_log, *c[1], **c[2])
                         construct_log["features"].append(current_layer)
                     construct_log["local_scope"] = scope

@@ -12,8 +12,8 @@
   "argument_translation" : {
     "out_size" : "conv_act/out_size",
     "kernel_size" : "conv_act/kernel_size",
-    "reduce_factor" : ["conv_act_2/reduce_factor", "downsize_mean/reduce_factor"],
-    "activation_fn" : ["do_activation/activation_fn", "conv_act_2/activation_fn"]
+    "reduce_factor" : ["conv_act_1/reduce_factor", "downsize_mean/reduce_factor"],
+    "activation_fn" : ["do_activation/activation_fn", "conv_act_1/activation_fn"]
   },
   "default_values" : {
     "activation_fn" : "tf.nn.relu",
