@@ -3,7 +3,7 @@
 from NetBluePrint.core import builder
 
 
-def create_block_operation(structure, name, argument_translation={}, default_parameters={}):
+def create_block_operation(structure, name, argument_translation={}, default_parameters={}, scope_type="VAR"):
     def created_block(input, layer_id, construct_log, *args, **kw):
         # print kw
         if len(args)!=0:
@@ -35,7 +35,7 @@ def create_block_operation(structure, name, argument_translation={}, default_par
                                                              "argument_translation" : argument_translation,
                                                              "default_parameters" : default_parameters}
         ret, _ = builder.create_workflow(input, structure, name + "_" + str(layer_id), default_dict=def_dict,
-                                         parent_log=construct_log)
+                                         parent_log=construct_log, scope_type=scope_type)
         del construct_log["block_hierarchy"][-1]
         return ret
 

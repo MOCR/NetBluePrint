@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.contrib.staging import StagingArea as staging_area
 
-def load_dataset(input, layer_id,construct_log, dataset, batchsize, *args, **kwargs):
+def load_dataset(input, layer_id,construct_log, dataset, batchsize=-1, *args, **kwargs):
     with tf.variable_scope("dataset_" + layer_id):
         with tf.device("/cpu:0"):
             construct_log["dataset"]=construct_log["awailable_datasets"][dataset](construct_log, batchsize,*args, **kwargs)

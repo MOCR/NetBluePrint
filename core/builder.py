@@ -40,7 +40,8 @@ def create_workflow(input,
                     construct_log_config={},
                     net_scope=None,
                     session_args={},
-                    restore=False):
+                    restore=False,
+                    scope_type="VAR"):
     """
     Create_workflow is the central function of NetBluePrint, it is used to build a workflow according to a specified configuration.
 
@@ -93,6 +94,7 @@ def create_workflow(input,
     else:
         construct_log = parent_log
         type_n = "Local"
+    construct_log["local_arguments"] = default_dict
     layer_numbers={}
     layer_numerotation = OP_COUNT
 
@@ -104,9 +106,15 @@ def create_workflow(input,
             if type(c[2][ic]) is str:
                 c[2][ic] = path_argument_translation(c[2][ic], construct_log, current_layer)
 
+    def get_scope(net_scope):
+        if scope_type=="VAR":
+            return tf.variable_scope(network_name if net_scope == None else net_scope, reuse=reuse)
+        else:
+            return tf.name_scope(network_name if net_scope == None else net_scope)
+
     with construct_log["tf_session"].as_default():
         with construct_log["printer"](type_n + " creation : " + network_name, timer=(type_n=="Main")):
-            with tf.variable_scope(network_name if net_scope == None else net_scope, reuse=reuse) as scope:
+            with get_scope(net_scope) as scope:
                 #print(scope.name)
                 if type_n == "Main":
                     construct_log["main_scope"] = scope
@@ -170,6 +178,12 @@ def create_workflow(input,
                             if type(additional_structure) is not list:
                                 additional_structure=[additional_structure]
                             configuration = configuration[:i+1]+additional_structure+configuration[i+1:]
+                        elif "else_structure" in c[2]:
+                            additional_structure = c[2]["else_structure"]
+                            if type(additional_structure) is not list:
+                                additional_structure = [additional_structure]
+                            configuration = configuration[:i + 1] + additional_structure + configuration[i + 1:]
+                        opp = None
                     elif c[0].startswith("&:"):
                         if c[0] not in default_dict:
                             raise Exception("Unknown operation alias : " + c[0])
@@ -215,6 +229,7 @@ def create_workflow(input,
                         current_layer = opp(current_layer, layer_id, construct_log, *c[1], **c[2])
                         construct_log["features"].append(current_layer)
                     construct_log["local_scope"] = scope
+                    construct_log["local_arguments"] = default_dict
                     i+=1
     if type_n == "Main":
         construct_log["logger"].save_header()

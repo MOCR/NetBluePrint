@@ -19,7 +19,14 @@ def network(input, layer_id, construct_log, name, struct=None, **kwargs):
         construct_log["networks"][name]=struct
         net_args=kwargs
         net_scope=None
-    net_output, _ = builder.create_workflow(input, struct, name, reuse=reuse, parent_log=construct_log, default_dict=net_args, net_scope=net_scope)
+    net_output, _ = builder.create_workflow(input,
+                                            struct,
+                                            name,
+                                            reuse=reuse,
+                                            parent_log=construct_log,
+                                            default_dict=net_args,
+                                            net_scope=net_scope,
+                                            scope_type="VAR")
     if reuse==None:
         if "network_scope" not in construct_log:
             construct_log["network_scope"]={}

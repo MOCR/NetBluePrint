@@ -137,8 +137,8 @@ for block in template_files:
         exit(-1)
     block_struct = []
     name = block.split("/")[-1].split(".")[0]
+    blockConf = recursive_unicode_convertion(blockConf)
     for l in blockConf["structure"]:
-        l = recursive_unicode_convertion(l)
         if type(l) is dict:
             type_ = l["type"]
             del l["type"]
@@ -151,7 +151,11 @@ for block in template_files:
         at = blockConf["argument_translation"]
     if "default_values" in blockConf:
         default_parameters = blockConf["default_values"]
-    block_op = template_reader.create_block_operation(block_struct, name, at, default_parameters)
+    block_op = template_reader.create_block_operation(block_struct,
+                                                      name,
+                                                      at,
+                                                      default_parameters,
+                                                      scope_type=blockConf["scope_type"] if "scope_type" in blockConf else "VAR")
     if name in operations:
         raise Exception("Unavailable block name")
     else:
