@@ -19,6 +19,7 @@ class PathDict:
             return local_node
 
     def __setitem__(self, key, value):
+        print(key)
         if type(key) is not list:
             key = key.split("/")
         local_key = key[0]
