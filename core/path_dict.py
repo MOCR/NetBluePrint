@@ -2,7 +2,8 @@
 class PathDict:
     def __init__(self, init_dict={}):
         self.internal_dict = {}
-        self.internal_dict.update(init_dict)
+        for key in list(init_dict.keys()):
+            self.__setitem__(key, init_dict[key])
 
     def __getitem__(self, key):
         if type(key) != list:
@@ -27,7 +28,18 @@ class PathDict:
                 self.internal_dict[local_key]=PathDict()
             self.internal_dict[local_key][child_key] = value
         else:
-            self.internal_dict[local_key] = value
+            if local_key.endswith(":[]"):
+                local_key_s = local_key.split(":")
+                if len(local_key_s) != 2:
+                    raise Exception("Invalid key format : '" + local_key + "'")
+                local_key = local_key_s[0]
+                if local_key not in self.internal_dict:
+                    self.internal_dict[local_key] = []
+                if not isinstance(self.internal_dict[local_key], list):
+                    raise Exception("Trying to happend to a leaf that is not a list '"+local_key + "'")
+                self.internal_dict[local_key].append(value)
+            else:
+                self.internal_dict[local_key] = value
 
 
     def __delitem__(self, key):
@@ -61,3 +73,14 @@ class PathDict:
 
     def values(self):
         return self.internal_dict.values()
+
+    def update(self, other_dict):
+        if isinstance(other_dict, PathDict):
+            list_of_keys = other_dict.keys(leafs=True, recursive=True)
+        else:
+            list_of_keys = other_dict.keys()
+        for key in list_of_keys:
+            self.__setitem__(key, other_dict[key])
+
+    def __contains__(self, key):
+        return key in self.keys(recursive=True)

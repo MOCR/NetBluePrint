@@ -10,6 +10,8 @@ import printProgress
 import collections
 import logger
 
+from path_dict import PathDict
+
 operations = {}
 awailable_datasets={}
 awailable_filters={}
@@ -19,13 +21,8 @@ OP_COUNT=1
 
 def path_argument_translation(argument, construct_log, current_layer):
     if argument.startswith("@:/"):
-        var_path = argument.split("/")[1:]
-        node = construct_log
-        for vp in var_path:
-            if type(node) is list:
-                vp = int(vp)
-            node = node[vp]
-            argument = node
+        var_path = argument[3:]
+        argument = construct_log[var_path]
     elif argument == "@input":
         argument = current_layer
     return argument
@@ -58,7 +55,7 @@ def create_workflow(input,
     current_layer = input
     type_n = ""
     if parent_log == None:
-        construct_log = {}
+        construct_log = PathDict()
         construct_log["scopes"] = []
         construct_log["losses"] = []
         construct_log["weight"] = []
@@ -91,9 +88,11 @@ def create_workflow(input,
             sess = tf.get_default_session()
             construct_log["tf_session"] = sess
 
-    else:
+    elif isinstance(parent_log, PathDict):
         construct_log = parent_log
         type_n = "Local"
+    else:
+        raise Exception("Bad type : parent_log should be of type PathDict but is " + type(parent_log))
     construct_log["local_arguments"] = default_dict
     layer_numbers={}
     layer_numerotation = OP_COUNT
@@ -145,30 +144,13 @@ def create_workflow(input,
                         opp = operations[opp]
                     # enable setting current_layer from a variable in construct_log found with a specific path (starting with "@:/")
                     elif c[0].startswith("@:/"):
-                        var_path = c[0].split("/")[1:]
-                        node = construct_log
-                        for vp in var_path:
-                            if type(node) is list:
-                                vp = int(vp)
-                            node = node[vp]
-                        current_layer = node
+                        var_path = c[0][3:]
+                        current_layer = construct_log[var_path]
                         opp = None
                     # enable saving current_layer to a specific path in construct_log (starting with ">:/")
                     elif c[0].startswith(">:/"):
-                        var_path = c[0].split("/")[1:]
-                        node = construct_log
-                        final = var_path[-1]
-                        for vp in var_path[:-1]:
-                            if vp not in node:
-                                node[vp] = {}
-                            node = node[vp]
-                        if final.endswith(":[]"):
-                            final = final.split(":")[0]
-                            if final not in node:
-                                node[final]=[]
-                            node[final].append(current_layer)
-                        else:
-                            node[final] = current_layer
+                        var_path = c[0][3:]
+                        construct_log[var_path] = current_layer
                         opp = None
                     elif c[0] == "if":
                         translate_arguments(c, construct_log, current_layer)
@@ -212,7 +194,7 @@ def create_workflow(input,
                                     pass
                                 try:
                                     if ("kw" in opp.__code__.co_varnames and "args" in opp.__code__.co_varnames)\
-                                        or (opp.__code__.co_varnames.index("kw") <= opp.__code__.co_argcount):
+                                            or (opp.__code__.co_varnames.index("kw") <= opp.__code__.co_argcount):
                                         add_var = True
                                 except:
                                     pass

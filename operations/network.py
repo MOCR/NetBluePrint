@@ -69,28 +69,15 @@ def all_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwar
         if key == "input":
             gpu_input = tf.split(input, nb_GPU)
         if key.startwith("@:/"):
-            var_path = key.split("/")[1:]
-            node = construct_log
-            for vp in var_path:
-                if type(node) is list:
-                    vp = int(vp)
-                node = node[vp]
-            value_to_split = node
+            value_to_split = construct_log[key[3:]]
             value_splits = tf.split(value_to_split, nb_GPU)
             for i, tdic in enumerate(towers_dict):
                 tdic[key] = value_splits[i]
             original_data[key]=value_to_split
-            
 
         elif key in kwargs.keys():
             if type(kwargs[key]) == str and kwargs[key].startswith("@:/"):
-                var_path = kwargs[key].split("/")[1:]
-                node = construct_log
-                for vp in var_path:
-                    if type(node) is list:
-                        vp = int(vp)
-                    node = node[vp]
-                value_to_split = node
+                value_to_split = construct_log[kwargs[key][3:]]
             else:
                 value_to_split = kwargs[key]
             value_splits = tf.split(value_to_split, nb_GPU)
@@ -100,23 +87,9 @@ def all_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwar
     for i in range(nb_GPU):
         with tf.device("/gpu:"+str(i)):
             for key in towers_dict[i]:
-                var_path = key.split("/")[1:]
-                node = construct_log
-                final = var_path[-1]
-                for vp in var_path[:-1]:
-                    if vp not in node:
-                        node[vp] = {}
-                    node = node[vp]
-                node[final] = towers_dict[i][key]
+                construct_log[key[3:]] = towers_dict[i][key]
             net_output = network(gpu_input[i], layer_id, construct_log, name, struct=struct, **towers_args[i])
 
     for key in original_data:
-        var_path = key.split("/")[1:]
-        node = construct_log
-        final = var_path[-1]
-        for vp in var_path[:-1]:
-            if vp not in node:
-                node[vp] = {}
-            node = node[vp]
-        node[final] = original_data[key]
+        construct_log[key[3:]] = original_data[key]
     return input
