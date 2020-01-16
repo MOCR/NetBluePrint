@@ -6,6 +6,7 @@ class PathDict:
             self.__setitem__(key, init_dict[key])
 
     def __getitem__(self, key):
+        print(key)
         if type(key) != list:
             key = key.split("/")
         local_key = key[0]
