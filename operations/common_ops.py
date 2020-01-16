@@ -54,3 +54,6 @@ def l2_norm_layer(input, layer_id, construct_log):
 def compose(input, layer_id, construct_log):
     construct_log["composition"]+=input
     return input
+
+def nb_channel(input, layer_id, construct_log):
+    return input.get_shape().as_list()[-1]

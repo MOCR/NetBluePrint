@@ -5,6 +5,9 @@ def add_tensors(input, layer_id, construct_log, second_input):
     with tf.variable_scope("add_" + str(layer_id), reuse=construct_log["reuse"]):
         return input + second_input
 
+def multiply_tensors(input, layer_id, construct_log, second_input):
+    with tf.variable_scope("multiply_" + str(layer_id), reuse=construct_log["reuse"]):
+        return input * second_input
 
 def resnet_add(input, layer_id, construct_log, second_input):
     with tf.variable_scope("resnet_add_" + str(layer_id), reuse=construct_log["reuse"]):

@@ -39,4 +39,3 @@ def block_repeater(input, layer_id, construct_log, structure, times, argument_tr
     net_output, _ = builder.create_workflow(input, repeated_structure, "block_repeater", parent_log=construct_log,
                                             default_dict=kwargs, net_scope=None)
     return net_output
-
