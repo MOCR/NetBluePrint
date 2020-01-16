@@ -68,7 +68,7 @@ def all_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwar
     for key in splits:
         if key == "input":
             gpu_input = tf.split(input, nb_GPU)
-        if key.startwith("@:/"):
+        if key.startswith("@:/"):
             value_to_split = construct_log[key[3:]]
             value_splits = tf.split(value_to_split, nb_GPU)
             for i, tdic in enumerate(towers_dict):
