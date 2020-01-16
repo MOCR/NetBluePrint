@@ -46,7 +46,7 @@ def CPU_server(input, layer_id, construct_log,name, struct=None, delet_losses_an
             gradients = list(construct_log["gradients"])
         else:
             gradients = []
-        net_output = network(input,layer_id, construct_log, name, struct=struct, **kwargs)
+        net_output = network(input,layer_id, construct_log, name, struct=struct, is_training=False, **kwargs)
         if delet_losses_and_grad:
             construct_log["losses"]=losses
             construct_log["gradients"] = gradients
@@ -88,7 +88,7 @@ def all_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwar
         with tf.device("/gpu:"+str(i)):
             for key in towers_dict[i]:
                 construct_log[key[3:]] = towers_dict[i][key]
-            net_output = network(gpu_input[i], layer_id, construct_log, name, struct=struct, **towers_args[i])
+            net_output = network(gpu_input[i], layer_id, construct_log, name, struct=struct,is_training=True, **towers_args[i])
 
     for key in original_data:
         construct_log[key[3:]] = original_data[key]
