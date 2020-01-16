@@ -6,6 +6,7 @@
     {"type" : ">:/attention_block_trunk"},
     {"type" : "@:/attention_block_start"},
     {"type" : "attention_mask"},
+    {"type" : ">:/attention_mask"},
     {"type" : "apply_attention_mask", "trunk" : "@:/attention_block_trunk"}
   ],
   "argument_translation" : {
