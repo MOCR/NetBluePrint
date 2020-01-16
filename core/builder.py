@@ -167,9 +167,10 @@ def create_workflow(input,
                             configuration = configuration[:i + 1] + additional_structure + configuration[i + 1:]
                         opp = None
                     elif c[0].startswith("&:"):
-                        if c[0] not in default_dict:
-                            raise Exception("Unknown operation alias : " + c[0])
-                        opp = operations[default_dict[c[0]]]
+                        opp_target = c[0][2:]
+                        if opp_target not in default_dict:
+                            raise Exception("Unknown operation alias : " + opp_target)
+                        opp = operations[default_dict[opp_target]]
                     else:
                         raise Exception("Unknown operation : " + c[0])
                     if opp != None:

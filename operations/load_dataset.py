@@ -51,7 +51,7 @@ def stage_dataset(input, layer_id,construct_log):
                 names.append(t)
                 shapes.append(tens.get_shape().as_list())
         stager=staging_area(dtypes, capacity=1, shapes=shapes)
-        construct_log["feed_stager"]=stager.put(tensors)
+        construct_log["feed_stager:[]"]=stager.put(tensors)
         sess = tf.get_default_session()
         sess.run(construct_log["feed_stager"])
         staged_tensors=stager.get()
@@ -62,5 +62,5 @@ def stage_dataset(input, layer_id,construct_log):
 
 def feed_stager(input, layer_id,construct_log):
     with tf.name_scope("dataset_stage_feeder_" + layer_id):
-        with tf.control_dependencies([construct_log["feed_stager"]]):
+        with tf.control_dependencies(construct_log["feed_stager"]):
             return tf.identity(input)
