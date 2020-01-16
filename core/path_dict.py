@@ -11,7 +11,11 @@ class PathDict:
         local_key = key[0]
         child_key = key[1:]
 
-        local_node = self.internal_dict[local_key]
+        try:
+            local_node = self.internal_dict[local_key]
+        except KeyError:
+            print("Unknown key " + local_key)
+            print(self.keys(recursive=True))
         if len(child_key) > 0:
             return local_node[child_key]
         else:
