@@ -6,7 +6,6 @@ class PathDict:
             self.__setitem__(key, init_dict[key])
 
     def __getitem__(self, key):
-        print(key)
         if type(key) != list:
             key = key.split("/")
         local_key = key[0]
@@ -19,11 +18,15 @@ class PathDict:
             return local_node
 
     def __setitem__(self, key, value):
-        print(key)
         if type(key) is not list:
             key = key.split("/")
         local_key = key[0]
         child_key = key[1:]
+
+        if isinstance(value, dict):
+            converted_dict = PathDict()
+            converted_dict.update(value)
+            value = converted_dict
 
         if len(child_key) > 0:
             if local_key not in self.internal_dict:
@@ -82,7 +85,12 @@ class PathDict:
         else:
             list_of_keys = other_dict.keys()
         for key in list_of_keys:
-            self.__setitem__(key, other_dict[key])
+            value = other_dict[key]
+            if isinstance(value, dict):
+                converted_dict = PathDict()
+                converted_dict.update(value)
+                value = converted_dict
+            self.__setitem__(key, value)
 
     def __contains__(self, key):
         return key in self.keys(recursive=True)
