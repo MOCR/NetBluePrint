@@ -101,3 +101,12 @@ def all_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwar
     for key in original_data:
         construct_log[key[3:]] = original_data[key]
     return input
+
+def on_device(input, layer_id, construct_log, device, struct):
+    with tf.device(device):
+        net_output, _ = builder.create_workflow(input,
+                                                struct,
+                                                "Device_"+str(layer_id),
+                                                parent_log=construct_log,
+                                                scope_type="name")
+    return net_output
