@@ -46,11 +46,14 @@ def CPU_server(input, layer_id, construct_log,name, struct=None, delet_losses_an
             gradients = list(construct_log["gradients"])
         else:
             gradients = []
+
         kwargs["is_training"] = False
         net_output = network(input,layer_id, construct_log, name, struct=struct, **kwargs)
         if delet_losses_and_grad:
             construct_log["losses"]=losses
             construct_log["gradients"] = gradients
+            update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS, scope=construct_log["network_scope"][name])
+            del update_ops[:]
         return input
 
 
