@@ -48,12 +48,15 @@ def CPU_server(input, layer_id, construct_log,name, struct=None, delet_losses_an
             gradients = []
 
         kwargs["is_training"] = False
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         net_output = network(input,layer_id, construct_log, name, struct=struct, **kwargs)
         if delet_losses_and_grad:
             construct_log["losses"]=losses
             construct_log["gradients"] = gradients
-            update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS, scope=construct_log["network_scope"][name].name)
-            del update_ops[:]
+            graph = tf.get_default_graph()
+            graph.clear_collection(tf.GraphKeys.UPDATE_OPS)
+            for opp in update_ops:
+                graph.add_to_collection(tf.GraphKeys.UPDATE_OPS, opp)
         return input
 
 
