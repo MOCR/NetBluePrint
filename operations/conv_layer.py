@@ -16,9 +16,11 @@ def conv(input, layer_id,construct_log, out_size, kernel_size, reduce_factor=1, 
         else:
             initializer=tf.random_normal_initializer(stddev=0.02)
         w = tf.get_variable("weights", [kernel_size, kernel_size, input.get_shape()[-1], out_size], initializer=initializer, regularizer=tf.nn.l2_loss)
+        w= tf.identity(w, name="weights_cache")
         output = tf.nn.conv2d(input,w, (1,reduce_factor,reduce_factor,1), "SAME")
         construct_log["weight"].append(w)
         b = tf.get_variable("bias", [1, 1, 1, out_size], initializer=tf.constant_initializer(0.0), regularizer=tf.nn.l2_loss)
+        b = tf.identity(b, name="bias_cache")
         output+=b
         construct_log["scopes"].append(scope)
         return output

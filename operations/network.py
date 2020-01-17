@@ -91,12 +91,19 @@ def all_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwar
             value_splits = tf.split(value_to_split, nb_GPU)
             for i, targs in enumerate(towers_args):
                 targs[key]=value_splits[i]
-
+    update_ops=None
     for i in range(nb_GPU):
         with tf.device("/gpu:"+str(i)):
             for key in towers_dict[i]:
                 construct_log[key[3:]] = towers_dict[i][key]
             net_output = network(gpu_input[i], layer_id, construct_log, name, struct=struct, **towers_args[i])
+            if update_ops is None:
+                update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+
+    graph = tf.get_default_graph()
+    graph.clear_collection(tf.GraphKeys.UPDATE_OPS)
+    for opp in update_ops:
+        graph.add_to_collection(tf.GraphKeys.UPDATE_OPS, opp)
 
     for key in original_data:
         construct_log[key[3:]] = original_data[key]
