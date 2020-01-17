@@ -47,7 +47,6 @@ def CPU_server(input, layer_id, construct_log,name, struct=None, delet_losses_an
         else:
             gradients = []
 
-        kwargs["is_training"] = False
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         net_output = network(input,layer_id, construct_log, name, struct=struct, **kwargs)
         if delet_losses_and_grad:
@@ -67,7 +66,6 @@ def all_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwar
     gpu_input = [None]*nb_GPU
     towers_args = []
     towers_dict = []
-    kwargs["is_training"] = True
     for g in range(nb_GPU):
         towers_args.append(dict(kwargs))
         towers_dict.append(dict())
