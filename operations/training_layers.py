@@ -22,7 +22,7 @@ def compute_gradients(input, layer_id, construct_log, scopes=["self"], losses=[]
                 l_var += tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=construct_log["network_scope"][s].name)
             else:
                 l_var+=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=s.name)
-        gradz = construct_log["optimizer"].compute_gradients(loss, var_list=l_var)
+        gradz = construct_log["optimizer"].compute_gradients(loss, var_list=l_var, colocate_gradients_with_ops=True)
         if "gradients" not in construct_log:
             construct_log["gradients"] = []
         construct_log["gradients"]+=gradz
@@ -56,7 +56,9 @@ def trainer(input, layer_id,construct_log, external_gradz=[], global_step=True, 
 
         training_ops = apply_gradients
         if apply_batchnorm:
-            training_ops += tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+            batchnorm_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+            print(batchnorm_ops)
+            training_ops += batchnorm_ops
         with tf.control_dependencies(training_ops):
             return tf.identity(input)
 
