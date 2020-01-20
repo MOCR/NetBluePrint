@@ -51,6 +51,7 @@ def CPU_server(input, layer_id, construct_log,name, struct=None, delet_losses_an
             gradients = []
 
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        summaries = tf.get_collection(tf.GraphKeys.SUMMARIES)
         net_output = network(input,layer_id, construct_log, name, struct=struct, var_scope=False, **kwargs)
         if delet_losses_and_grad:
             construct_log["losses"]=losses
@@ -59,6 +60,10 @@ def CPU_server(input, layer_id, construct_log,name, struct=None, delet_losses_an
             graph.clear_collection(tf.GraphKeys.UPDATE_OPS)
             for opp in update_ops:
                 graph.add_to_collection(tf.GraphKeys.UPDATE_OPS, opp)
+
+            graph.clear_collection(tf.GraphKeys.SUMMARIES)
+            for summ in summaries:
+                graph.add_to_collection(tf.GraphKeys.SUMMARIES, summ)
         return input
 
 
