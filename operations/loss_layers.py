@@ -3,7 +3,7 @@ import numpy as np
 
 
 def additive_margin(input, layer_id, construct_log, labels, num_class,m=0.3,s=30, weight=1.0, center_loss=False):
-    with tf.variable_scope("additive_margin_"+str(layer_id)):
+    with tf.variable_scope("additive_margin_"+str(layer_id), reuse=construct_log["reuse"]):
         embedding_size = input.get_shape().as_list()[-1]
         weights_init=tf.random.normal(shape=[num_class, embedding_size], stddev=0.01)
         weights = tf.get_variable("centroids", initializer=weights_init)
@@ -29,7 +29,7 @@ def additive_margin(input, layer_id, construct_log, labels, num_class,m=0.3,s=30
 
 
 def sampled_additive_margin(input, layer_id, construct_log, labels, num_class,m=0.3,s=30, weight=1.0, number_of_samples=20000):
-    with tf.variable_scope("additive_margin_"+str(layer_id)):
+    with tf.variable_scope("additive_margin_"+str(layer_id), reuse=construct_log["reuse"]):
         if num_class<number_of_samples:
             raise Exception("More samples than number of classes, abord..")
 
