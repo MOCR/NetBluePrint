@@ -1,6 +1,7 @@
 # import tensorflow as tf
 
 from NetBluePrint.core import builder
+from path_dict import PathDict
 
 
 def create_block_operation(structure, name, argument_translation={}, default_parameters={}, scope_type="VAR"):
@@ -29,7 +30,7 @@ def create_block_operation(structure, name, argument_translation={}, default_par
                 "Can be caused by invalid block declaration or improper cleaning of block_hierarchy.")
             raise Exception("block_hierarchy error")
         construct_log["block_hierarchy"].append(name)
-        def_dict = dict(construct_log["default_dict"])
+        def_dict = PathDict(construct_log["default_dict"])
         def_dict.update(kw)
         construct_log["logger"].structure_blueprint[name] = {"structure" : structure,
                                                              "argument_translation" : argument_translation,
