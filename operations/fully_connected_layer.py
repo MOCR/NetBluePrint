@@ -16,7 +16,7 @@ def fully_connected(input, layer_id,construct_log, out, outshape=None, function=
         input_shape = input.get_shape().as_list()
         nb_dim = len(input_shape)
         if -1 in input_shape or None in input_shape:
-            input_shape = tf.shape(input_shape)
+            input_shape = tf.shape(input)
         if init=="ORTHO":
             initializer = tf.orthogonal_initializer()
         elif init=="SMALL":
