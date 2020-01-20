@@ -181,7 +181,11 @@ def create_workflow(input,
                         else:
                             layer_id = str(i)
                         layer_numbers[opp]+=1
-                        for v_name in list(default_dict.keys()):
+                        if isinstance(default_dict, PathDict):
+                            default_dict_keys = list(default_dict.keys(leafs=True, recursive=True))
+                        else:
+                            default_dict_keys = list(default_dict.keys())
+                        for v_name in default_dict_keys:
                             split_v_name = v_name.split("/", 1)
                             if len(split_v_name) > 1:
                                 if split_v_name[0] == c[0] or split_v_name[0] == c[0] + "_" + str(layer_id):
