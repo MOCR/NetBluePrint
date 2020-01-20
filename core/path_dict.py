@@ -3,7 +3,10 @@ class PathDict:
     def __init__(self, init_dict={}):
         self.internal_dict = {}
         for key in list(init_dict.keys()):
-            self.__setitem__(key, init_dict[key])
+            val = init_dict[key]
+            if isinstance(val, PathDict):
+                val = PathDict(val)
+            self.__setitem__(key, val)
 
     def __getitem__(self, key):
         if type(key) != list:
