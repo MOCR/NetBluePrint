@@ -6,6 +6,7 @@ import pynvml
 def network(input, layer_id, construct_log, name, struct=None, var_scope=True, **kwargs):
     if "networks" not in construct_log:
         construct_log["networks"]={}
+    pre_scope_reuse = construct_log["reuse"]
     reuse=None
     if name in construct_log["networks"]:
         reuse=True
@@ -19,6 +20,7 @@ def network(input, layer_id, construct_log, name, struct=None, var_scope=True, *
         construct_log["networks"][name]=struct
         net_args=kwargs
         net_scope=None
+    construct_log["reuse"] = reuse
     net_output, _ = builder.create_workflow(input,
                                             struct,
                                             name,
@@ -34,6 +36,7 @@ def network(input, layer_id, construct_log, name, struct=None, var_scope=True, *
             construct_log["network_default_params"]={}
         construct_log["network_default_params"][name]=kwargs
         construct_log["network_scope"][name]=construct_log["local_scope"]
+    construct_log["reuse"] = pre_scope_reuse
     return net_output
 
 def CPU_server(input, layer_id, construct_log,name, struct=None, delet_losses_and_grad=True, **kwargs):
