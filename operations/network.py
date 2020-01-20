@@ -3,7 +3,7 @@ import tensorflow as tf
 from NetBluePrint.core import builder
 import pynvml
 
-def network(input, layer_id, construct_log, name, struct=None, **kwargs):
+def network(input, layer_id, construct_log, name, struct=None, var_scope=True, **kwargs):
     if "networks" not in construct_log:
         construct_log["networks"]={}
     reuse=None
@@ -26,7 +26,7 @@ def network(input, layer_id, construct_log, name, struct=None, **kwargs):
                                             parent_log=construct_log,
                                             default_dict=net_args,
                                             net_scope=net_scope,
-                                            scope_type="VAR")
+                                            scope_type="VAR" if var_scope else "name")
     if reuse==None:
         if "network_scope" not in construct_log:
             construct_log["network_scope"]={}
@@ -48,7 +48,7 @@ def CPU_server(input, layer_id, construct_log,name, struct=None, delet_losses_an
             gradients = []
 
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        net_output = network(input,layer_id, construct_log, name, struct=struct, **kwargs)
+        net_output = network(input,layer_id, construct_log, name, struct=struct, var_scope=False, **kwargs)
         if delet_losses_and_grad:
             construct_log["losses"]=losses
             construct_log["gradients"] = gradients
@@ -94,7 +94,7 @@ def all_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwar
         with tf.device("/gpu:"+str(i)):
             for key in towers_dict[i]:
                 construct_log[key[3:]] = towers_dict[i][key]
-            net_output = network(gpu_input[i], layer_id, construct_log, name, struct=struct, **towers_args[i])
+            net_output = network(gpu_input[i], layer_id, construct_log, name, struct=struct, var_scope=False, **towers_args[i])
             if update_ops is None:
                 update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
 
