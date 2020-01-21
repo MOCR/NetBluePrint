@@ -174,7 +174,7 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
                                  var_scope=True,
                                  **towers_args[i])
 
-            replica_variables = tf.global_variables(scopeconstruct_log["network_scope"][replica_name].name)
+            replica_variables = tf.global_variables(scope=construct_log["network_scope"][replica_name].name)
             replica_variables = sorted(replica_variables, key = lambda x : x.name)
             variables.append(replica_variables)
             outs.append(net_output)
