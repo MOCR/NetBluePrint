@@ -71,6 +71,8 @@ def set_adam_optimizer(input, layer_id, construct_log, learning_rate=0.0001, eps
 def initializer(input, layer_id, construct_log):
     sess = tf.get_default_session()
     sess.run(tf.global_variables_initializer())
+    if "initialization_opps" in construct_log:
+        sess.run(construct_log["initialization_opps"])
     return input
 
 def set_global_step(input, layer_id, construct_log):

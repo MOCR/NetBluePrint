@@ -126,6 +126,75 @@ def all_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwar
         construct_log[key[3:]] = original_data[key]
     return input
 
+
+def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwargs):
+    with tf.device("/cpu:0"):
+        pynvml.nvmlInit()
+        nb_GPU = pynvml.nvmlDeviceGetCount()
+        construct_log["number_of_GPUs"] = nb_GPU
+        gpu_input = [None]*nb_GPU
+        towers_args = []
+        towers_dict = []
+        for g in range(nb_GPU):
+            towers_args.append(dict(kwargs))
+            towers_dict.append(dict())
+
+        original_data = {}
+        for key in splits:
+            if key == "input":
+                gpu_input = tf.split(input, nb_GPU)
+            if key.startswith("@:/"):
+                value_to_split = construct_log[key[3:]]
+                value_splits = tf.split(value_to_split, nb_GPU)
+                for i, tdic in enumerate(towers_dict):
+                    tdic[key] = value_splits[i]
+                original_data[key]=value_to_split
+
+            elif key in kwargs.keys():
+                if type(kwargs[key]) == str and kwargs[key].startswith("@:/"):
+                    value_to_split = construct_log[kwargs[key][3:]]
+                else:
+                    value_to_split = kwargs[key]
+                value_splits = tf.split(value_to_split, nb_GPU)
+                for i, targs in enumerate(towers_args):
+                    targs[key]=value_splits[i]
+    variables = []
+    for i in range(nb_GPU):
+        with tf.device("/gpu:"+str(i)):
+            for key in towers_dict[i]:
+                construct_log[key[3:]] = towers_dict[i][key]
+
+            replica_name = name if i == 0 else name+"_"+str(i)
+            net_output = network(gpu_input[i],
+                                 layer_id,
+                                 construct_log,
+                                 replica_name,
+                                 struct=struct,
+                                 var_scope=True,
+                                 **towers_args[i])
+
+            replica_variables = tf.global_variables(scopeconstruct_log["network_scope"][replica_name].name)
+            replica_variables = sorted(replica_variables, key = lambda x : x.name)
+            variables.append(replica_variables)
+
+    master = variables[0]
+
+    variables = zip(*variables)
+
+    nccl = tf.contrib.distribute.AllReduceCrossDeviceOps()
+
+    for var in variables:
+        construct_log["initialization_opps:[]"]=nccl.broadcast(var[0], var[1:])
+
+    synchronize = nccl.batch_reduce(tf.distribute.ReduceOp.MEAN, variables)
+
+    with tf.control_dependencies(synchronize):
+        construct_log["synchronize"] = tf.identity(0)
+
+    for key in original_data:
+        construct_log[key[3:]] = original_data[key]
+    return input
+
 def on_device(input, layer_id, construct_log, device, struct):
     with tf.device(device):
         net_output, _ = builder.create_workflow(input,
@@ -134,3 +203,4 @@ def on_device(input, layer_id, construct_log, device, struct):
                                                 parent_log=construct_log,
                                                 scope_type="name")
     return net_output
+

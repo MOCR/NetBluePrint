@@ -11,6 +11,7 @@ class dataset(object):
         self.data_dict = {}
         self.construct_log = construct_log
         self.batchsize = batchsize
+        construct_log["batchsize"]=batchsize
 
     def __getitem__(self, key):
         return self.data_dict[key]
