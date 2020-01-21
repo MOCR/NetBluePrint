@@ -52,6 +52,8 @@ def CPU_server(input, layer_id, construct_log,name, struct=None, delet_losses_an
 
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         summaries = tf.get_collection(tf.GraphKeys.SUMMARIES)
+        losses_collection = tf.get_collection(tf.GraphKeys.LOSSES)
+        regul = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
         net_output = network(input,layer_id, construct_log, name, struct=struct, var_scope=False, **kwargs)
         if delet_losses_and_grad:
             construct_log["losses"]=losses
@@ -64,39 +66,48 @@ def CPU_server(input, layer_id, construct_log,name, struct=None, delet_losses_an
             graph.clear_collection(tf.GraphKeys.SUMMARIES)
             for summ in summaries:
                 graph.add_to_collection(tf.GraphKeys.SUMMARIES, summ)
+
+            graph.clear_collection(tf.GraphKeys.LOSSES)
+            for l in losses_collection:
+                graph.add_to_collection(tf.GraphKeys.LOSSES, l)
+
+            graph.clear_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
+            for r in regul:
+                graph.add_to_collection(tf.GraphKeys.REGULARIZATION_LOSSES, r)
         return input
 
 
 def all_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwargs):
-    pynvml.nvmlInit()
-    nb_GPU = pynvml.nvmlDeviceGetCount()
-    construct_log["number_of_GPUs"] = nb_GPU
-    gpu_input = [None]*nb_GPU
-    towers_args = []
-    towers_dict = []
-    for g in range(nb_GPU):
-        towers_args.append(dict(kwargs))
-        towers_dict.append(dict())
+    with tf.device("/cpu:0"):
+        pynvml.nvmlInit()
+        nb_GPU = pynvml.nvmlDeviceGetCount()
+        construct_log["number_of_GPUs"] = nb_GPU
+        gpu_input = [None]*nb_GPU
+        towers_args = []
+        towers_dict = []
+        for g in range(nb_GPU):
+            towers_args.append(dict(kwargs))
+            towers_dict.append(dict())
 
-    original_data = {}
-    for key in splits:
-        if key == "input":
-            gpu_input = tf.split(input, nb_GPU)
-        if key.startswith("@:/"):
-            value_to_split = construct_log[key[3:]]
-            value_splits = tf.split(value_to_split, nb_GPU)
-            for i, tdic in enumerate(towers_dict):
-                tdic[key] = value_splits[i]
-            original_data[key]=value_to_split
+        original_data = {}
+        for key in splits:
+            if key == "input":
+                gpu_input = tf.split(input, nb_GPU)
+            if key.startswith("@:/"):
+                value_to_split = construct_log[key[3:]]
+                value_splits = tf.split(value_to_split, nb_GPU)
+                for i, tdic in enumerate(towers_dict):
+                    tdic[key] = value_splits[i]
+                original_data[key]=value_to_split
 
-        elif key in kwargs.keys():
-            if type(kwargs[key]) == str and kwargs[key].startswith("@:/"):
-                value_to_split = construct_log[kwargs[key][3:]]
-            else:
-                value_to_split = kwargs[key]
-            value_splits = tf.split(value_to_split, nb_GPU)
-            for i, targs in enumerate(towers_args):
-                targs[key]=value_splits[i]
+            elif key in kwargs.keys():
+                if type(kwargs[key]) == str and kwargs[key].startswith("@:/"):
+                    value_to_split = construct_log[kwargs[key][3:]]
+                else:
+                    value_to_split = kwargs[key]
+                value_splits = tf.split(value_to_split, nb_GPU)
+                for i, targs in enumerate(towers_args):
+                    targs[key]=value_splits[i]
     update_ops=None
     for i in range(nb_GPU):
         with tf.device("/gpu:"+str(i)):
