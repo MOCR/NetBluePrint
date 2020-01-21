@@ -35,8 +35,9 @@ def trainer(input, layer_id,construct_log, external_gradz=[], global_step=True, 
         if "gradients" not in construct_log:
             construct_log["gradients"] = []
         gradients = construct_log["gradients"]+external_gradz
+        processed_var = []
         for i in range(len(gradients)):
-            if gradients[i][0] != None:
+            if gradients[i][0] != None and gradients[ig][1].name not in processed_var:
                 lgw=[]
                 for ig in range(i+1, len(gradients)):
                     if gradients[ig][1].name == gradients[i][1].name:
@@ -45,6 +46,7 @@ def trainer(input, layer_id,construct_log, external_gradz=[], global_step=True, 
                     merged_gradz.append((tf.reduce_mean(tf.stack(lgw), 0), gradients[i][1]))
                 else:
                     merged_gradz.append(gradients[i])
+                processed_var.append(gradients[ig][1].name)
         if global_step==True:
             if "global_step" not in construct_log:
                 global_step = tf.get_variable("global_step", initializer=0)
@@ -57,7 +59,6 @@ def trainer(input, layer_id,construct_log, external_gradz=[], global_step=True, 
         training_ops = apply_gradients
         if apply_batchnorm:
             batchnorm_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-            print(batchnorm_ops)
             training_ops += batchnorm_ops
         with tf.control_dependencies(training_ops):
             return tf.identity(input)
