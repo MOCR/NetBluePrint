@@ -53,6 +53,9 @@ def trainer(input, layer_id,construct_log, external_gradz=[], global_step=True, 
                 construct_log["global_step"] = global_step
             else:
                 global_step = construct_log["global_step"]
+
+        for mergedz in merged_gradz:
+            print(mergedz)
         gradients=merged_gradz
         apply_gradients=[construct_log["optimizer"].apply_gradients(gradients, global_step=global_step)]
 
