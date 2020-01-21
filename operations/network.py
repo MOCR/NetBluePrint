@@ -186,7 +186,8 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
     nccl = tf.contrib.distribute.AllReduceCrossDeviceOps()
 
     for var in variables:
-        construct_log["initialization_opps:[]"]=nccl.broadcast(var[0], var[1:])
+        for replic in var[1:]:
+            construct_log["initialization_opps:[]"]= tf.assign(replic, var[0])
 
     synchronize = nccl.batch_reduce(tf.distribute.ReduceOp.MEAN, variables)
 
