@@ -159,6 +159,7 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
                 for i, targs in enumerate(towers_args):
                     targs[key]=value_splits[i]
     variables = []
+    outs = []
     for i in range(nb_GPU):
         with tf.device("/gpu:"+str(i)):
             for key in towers_dict[i]:
@@ -176,6 +177,7 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
             replica_variables = tf.global_variables(scopeconstruct_log["network_scope"][replica_name].name)
             replica_variables = sorted(replica_variables, key = lambda x : x.name)
             variables.append(replica_variables)
+            outs.append(net_output)
 
     master = variables[0]
 
@@ -189,7 +191,8 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
     synchronize = nccl.batch_reduce(tf.distribute.ReduceOp.MEAN, variables)
 
     with tf.control_dependencies(synchronize):
-        construct_log["synchronize"] = tf.identity(0)
+        with tf.control_dependencies(outs):
+            construct_log["synchronize"] = tf.identity(0)
 
     for key in original_data:
         construct_log[key[3:]] = original_data[key]
