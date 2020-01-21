@@ -42,6 +42,8 @@ def trainer(input, layer_id,construct_log, external_gradz=[], global_step=True, 
                 for ig in range(i+1, len(gradients)):
                     if gradients[ig][1].name == gradients[i][1].name:
                         lgw.append(gradients[ig][0])
+                print(lgw)
+                print("\n")
                 if len(lgw)!=0:
                     merged_gradz.append((tf.reduce_mean(tf.stack(lgw), 0), gradients[i][1]))
                 else:
@@ -54,8 +56,6 @@ def trainer(input, layer_id,construct_log, external_gradz=[], global_step=True, 
             else:
                 global_step = construct_log["global_step"]
 
-        for mergedz in merged_gradz:
-            print(mergedz)
         gradients=merged_gradz
         apply_gradients=[construct_log["optimizer"].apply_gradients(gradients, global_step=global_step)]
 
