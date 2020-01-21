@@ -38,16 +38,14 @@ def trainer(input, layer_id,construct_log, external_gradz=[], global_step=True, 
         processed_var = []
         for i in range(len(gradients)):
             if gradients[i][0] != None and gradients[i][1].name not in processed_var:
-                lgw=[]
+                lgw=[gradients[i]]
                 for ig in range(i+1, len(gradients)):
                     if gradients[ig][1].name == gradients[i][1].name:
                         lgw.append(gradients[ig][0])
-                print(lgw)
-                print("\n")
-                if len(lgw)!=0:
+                if len(lgw)>1:
                     merged_gradz.append((tf.reduce_mean(tf.stack(lgw), 0), gradients[i][1]))
                 else:
-                    merged_gradz.append(gradients[i])
+                    merged_gradz.append(lgw[0])
                 processed_var.append(gradients[ig][1].name)
         if global_step==True:
             if "global_step" not in construct_log:
