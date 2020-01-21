@@ -16,7 +16,6 @@ def compute_gradients(input, layer_id, construct_log, scopes=["self"], losses=[]
         l_var = []
         for s in scopes:
             if s == "self":
-
                 l_var+=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=construct_log["main_scope"].name)
             elif type(s) is str:
                 l_var += tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=construct_log["network_scope"][s].name)
@@ -26,6 +25,7 @@ def compute_gradients(input, layer_id, construct_log, scopes=["self"], losses=[]
         if "gradients" not in construct_log:
             construct_log["gradients"] = []
         construct_log["gradients"]+=gradz
+        construct_log["total_losses:[]"]=loss
         if clear_losses:
             construct_log["losses"]=[]
         return input
@@ -37,7 +37,7 @@ def trainer(input, layer_id,construct_log, external_gradz=[], global_step=True, 
         gradients = construct_log["gradients"]+external_gradz
         processed_var = []
         for i in range(len(gradients)):
-            if gradients[i][0] != None and gradients[ig][1].name not in processed_var:
+            if gradients[i][0] != None and gradients[i][1].name not in processed_var:
                 lgw=[]
                 for ig in range(i+1, len(gradients)):
                     if gradients[ig][1].name == gradients[i][1].name:
