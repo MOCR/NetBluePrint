@@ -17,6 +17,11 @@ def compute_gradients(input, layer_id, construct_log, scopes=["self"], losses=[]
         for s in scopes:
             if s == "self":
                 l_var+=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=construct_log["main_scope"].name)
+            elif s.startswith("@:/"):
+                scope = construct_log[s[3:]]
+                if not isinstance(scope, str):
+                    scope = scope.name
+                l_var += tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=scope)
             elif type(s) is str:
                 l_var += tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=construct_log["network_scope"][s].name)
             else:
