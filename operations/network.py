@@ -208,6 +208,8 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
         for replic in var[1:]:
             construct_log["initialization_opps:[]"]= tf.assign(replic, var[0])
 
+    print(variables)
+
     synchronize = nccl.batch_reduce(tf.distribute.ReduceOp.MEAN, variables)
 
     with tf.control_dependencies(synchronize):
