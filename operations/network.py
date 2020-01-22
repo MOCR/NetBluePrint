@@ -166,8 +166,10 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
         original_gradz = construct_log["gradients"]
     else:
         original_gradz = []
+    destinations = []
     for i in range(nb_GPU):
         with tf.device("/gpu:"+str(i)):
+            destinations.append("/gpu:"+str(i))
             for key in towers_dict[i]:
                 construct_log[key[3:]] = towers_dict[i][key]
 
@@ -213,7 +215,7 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
     for v in variables:
         print(v)
         print("\n")
-        synchronize = nccl.reduce(tf.distribute.ReduceOp.MEAN, v)
+        synchronize = nccl.reduce(tf.distribute.ReduceOp.MEAN, v, destinations)
 
     with tf.control_dependencies(synchronize):
         with tf.control_dependencies(outs):
