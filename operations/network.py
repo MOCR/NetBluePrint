@@ -211,12 +211,12 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
 
     synchronize = []
     construct_log["printer"].printResult("INFO", "creating sync opps")
-
-    for v in variables:
-        print(v)
-        print("\n")
-        per_replica = value_lib.PerReplica({ device: var for device, var in zip(destinations, v)})
-        synchronize += nccl.reduce(tf.distribute.ReduceOp.MEAN, per_replica, destinations)
+    with tf.device("/gpu:0"):
+        for v in variables:
+            print(v)
+            print("\n")
+            per_replica = value_lib.PerReplica({ device: var for device, var in zip(destinations, v)})
+            synchronize += nccl.reduce(tf.distribute.ReduceOp.MEAN, per_replica, destinations)
 
     construct_log["printer"].printResult("INFO", "finished sync opps")
 
