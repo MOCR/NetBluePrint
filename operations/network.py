@@ -218,8 +218,9 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
             var_dest = []
             per_replica = value_lib.PerReplica({ device: var for device, var in zip(destinations, v)})
             mirrored = nccl.reduce(tf.distribute.ReduceOp.MEAN, per_replica, destinations)
-            for device in destinations:
-                synchronize.append(mirrored.get(device))
+            for device, var in zip(destinations, v):
+                with tf.device(device):
+                    synchronize.append(v.assign(mirrored.get(device)))
 
     construct_log["printer"].printResult("INFO", "finished sync opps")
 
