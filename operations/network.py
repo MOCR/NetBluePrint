@@ -162,7 +162,10 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
                     targs[key]=value_splits[i]
     variables = []
     outs = []
-    original_gradz = construct_log["gradients"]
+    if "gradients" in construct_log:
+        original_gradz = construct_log["gradients"]
+    else:
+        original_gradz = []
     for i in range(nb_GPU):
         with tf.device("/gpu:"+str(i)):
             for key in towers_dict[i]:
