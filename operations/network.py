@@ -232,16 +232,18 @@ def nccl_gradient_sync(input, layer_id, construct_log):
         synchronized_grad_vars = []
 
         batch_reduce_vals = []
+        valid_grad_var_towers = []
         for tgv in grad_var_towers:
             if tgv[0][0] is not None:
                 per_replica = value_lib.PerReplica({ device: gv[0] for device, gv in zip(destinations, tgv)})
                 batch_reduce_vals.append((per_replica, destinations))
+                valid_grad_var_towers.append(tgv)
             else:
                 for gv in tgv:
                     synchronized_grad_vars.append(gv)
 
         batch_mirrored = nccl.batch_reduce(tf.distribute.ReduceOp.MEAN, batch_reduce_vals)
-        for tgv, mirrored in batch_mirrored:
+        for tgv, mirrored in zip(valid_grad_var_towers, batch_mirrored):
                 for device, gv in zip(destinations, tgv):
                     with tf.device(device):
                         synchronized_grad_vars.append((mirrored.get(device), gv[1]))
