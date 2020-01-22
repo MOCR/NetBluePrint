@@ -212,7 +212,9 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
     return input
 
 def towerize_gradient(input, layer_id, construct_log):
-    construct_log["tower_gradients:[]"] = construct_log["gradients"]
+    gradients = construct_log["gradients"]
+    gradients = sorted(gradients, key= lambda x : x[1].name)
+    construct_log["tower_gradients:[]"] = gradients
     construct_log["gradients"] = []
     return input
 
@@ -224,7 +226,7 @@ def nccl_gradient_sync(input, layer_id, construct_log):
     tower_gradients = construct_log["tower_gradients"]
     destinations = construct_log["tower_devices"]
 
-    grad_var_towers = zip(tower_gradients)
+    grad_var_towers = zip(*tower_gradients)
 
     synchronized_grad_vars = []
     for tgv in grad_var_towers:
