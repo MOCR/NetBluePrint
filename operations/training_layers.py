@@ -21,6 +21,7 @@ def compute_gradients(input, layer_id, construct_log, scopes=["self"], losses=[]
                 scope = construct_log[s[3:]]
                 if not isinstance(scope, str):
                     scope = scope.name
+                construct_log["printer"].printResult("INFO", "gradient scope : " + scope if isinstance(scope, str) else scope.name)
                 l_var += tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=scope)
             elif type(s) is str:
                 l_var += tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=construct_log["network_scope"][s].name)
