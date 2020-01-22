@@ -235,7 +235,7 @@ def nccl_gradient_sync(input, layer_id, construct_log):
         for tgv in grad_var_towers:
             if tgv[0][0] is not None:
                 per_replica = value_lib.PerReplica({ device: gv[0] for device, gv in zip(destinations, tgv)})
-                batch_reduce_vals.append([per_replica, destinations])
+                batch_reduce_vals.append((per_replica, destinations))
             else:
                 for gv in tgv:
                     synchronized_grad_vars.append(gv)
