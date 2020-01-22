@@ -130,6 +130,7 @@ def all_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwar
 
 
 def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwargs):
+    from tensorflow.python.distribute import values as value_lib
     with tf.device("/cpu:0"):
         pynvml.nvmlInit()
         nb_GPU = pynvml.nvmlDeviceGetCount()
@@ -215,7 +216,8 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
     for v in variables:
         print(v)
         print("\n")
-        synchronize = nccl.reduce(tf.distribute.ReduceOp.MEAN, v, destinations)
+        per_replica = value_lib.PerReplica({ device: var for device, var in zip(destinations, v)})
+        synchronize = nccl.reduce(tf.distribute.ReduceOp.MEAN, per_replica, destinations)
 
     with tf.control_dependencies(synchronize):
         with tf.control_dependencies(outs):
