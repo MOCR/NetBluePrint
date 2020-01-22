@@ -221,7 +221,7 @@ def towerize_gradient(input, layer_id, construct_log):
 def nccl_gradient_sync(input, layer_id, construct_log):
     from tensorflow.python.distribute import values as value_lib
 
-    nccl = tf.contrib.distribute.AllReduceCrossDeviceOps()
+    nccl = tf.contrib.distribute.AllReduceCrossDeviceOps(all_reduce_alg='hierarchical_copy')
 
     tower_gradients = construct_log["tower_gradients"]
     destinations = construct_log["tower_devices"]
@@ -238,6 +238,9 @@ def nccl_gradient_sync(input, layer_id, construct_log):
             for device, gv in zip(destinations, tgv):
                 with tf.device(device):
                     synchronized_grad_vars.append((mirrored.get(device), gv[1]))
+        else:
+            for gv in tgv:
+                synchronized_grad_vars.append(gv)
 
     construct_log["gradients"] = synchronized_grad_vars
     return input
