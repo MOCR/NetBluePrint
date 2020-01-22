@@ -220,7 +220,7 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
             mirrored = nccl.reduce(tf.distribute.ReduceOp.MEAN, per_replica, destinations)
             for device, var in zip(destinations, v):
                 with tf.device(device):
-                    synchronize.append(v.assign(mirrored.get(device)))
+                    synchronize.append(var.assign(mirrored.get(device)))
 
     construct_log["printer"].printResult("INFO", "finished sync opps")
 
@@ -231,6 +231,10 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
     for key in original_data:
         construct_log[key[3:]] = original_data[key]
     return input
+
+# def towerize_gradient()
+#
+# def nccl_gradient_sync(input, layer_id, construct_log):
 
 def on_device(input, layer_id, construct_log, device, struct):
     with tf.device(device):
