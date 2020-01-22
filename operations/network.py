@@ -219,6 +219,8 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
         per_replica = value_lib.PerReplica({ device: var for device, var in zip(destinations, v)})
         synchronize = nccl.reduce(tf.distribute.ReduceOp.MEAN, per_replica, destinations)
 
+    construct_log["printer"].printResult("finished sync opps")
+
     with tf.control_dependencies(synchronize):
         with tf.control_dependencies(outs):
             construct_log["synchronize"] = tf.identity(0)
