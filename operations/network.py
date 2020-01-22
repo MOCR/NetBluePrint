@@ -219,31 +219,32 @@ def towerize_gradient(input, layer_id, construct_log):
     return input
 
 def nccl_gradient_sync(input, layer_id, construct_log):
-    from tensorflow.python.distribute import values as value_lib
+    with tf.name_scope("gradient_sync_"+str(layer_id)):
+        from tensorflow.python.distribute import values as value_lib
 
-    nccl = tf.contrib.distribute.AllReduceCrossDeviceOps(all_reduce_alg='hierarchical_copy')
+        nccl = tf.contrib.distribute.AllReduceCrossDeviceOps(all_reduce_alg='hierarchical_copy')
 
-    tower_gradients = construct_log["tower_gradients"]
-    destinations = construct_log["tower_devices"]
+        tower_gradients = construct_log["tower_gradients"]
+        destinations = construct_log["tower_devices"]
 
-    grad_var_towers = zip(*tower_gradients)
+        grad_var_towers = zip(*tower_gradients)
 
-    synchronized_grad_vars = []
-    for tgv in grad_var_towers:
-        if tgv[0][0] is not None:
-            print(tgv)
-            print("\n")
-            per_replica = value_lib.PerReplica({ device: gv[0] for device, gv in zip(destinations, tgv)})
-            mirrored = nccl.reduce(tf.distribute.ReduceOp.MEAN, per_replica, destinations)
-            for device, gv in zip(destinations, tgv):
-                with tf.device(device):
-                    synchronized_grad_vars.append((mirrored.get(device), gv[1]))
-        else:
-            for gv in tgv:
-                synchronized_grad_vars.append(gv)
+        synchronized_grad_vars = []
+        for tgv in grad_var_towers:
+            if tgv[0][0] is not None:
+                print(tgv)
+                print("\n")
+                per_replica = value_lib.PerReplica({ device: gv[0] for device, gv in zip(destinations, tgv)})
+                mirrored = nccl.reduce(tf.distribute.ReduceOp.MEAN, per_replica, destinations)
+                for device, gv in zip(destinations, tgv):
+                    with tf.device(device):
+                        synchronized_grad_vars.append((mirrored.get(device), gv[1]))
+            else:
+                for gv in tgv:
+                    synchronized_grad_vars.append(gv)
 
-    construct_log["gradients"] = synchronized_grad_vars
-    return input
+        construct_log["gradients"] = synchronized_grad_vars
+        return input
 
 def on_device(input, layer_id, construct_log, device, struct):
     with tf.device(device):
