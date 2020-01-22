@@ -181,6 +181,11 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
 
     master = variables[0]
 
+    for i, rep in enumerate(variables):
+        with open("variables_"+str(i)+".csv", "w") as f:
+            for var in rep:
+                    f.write(var.name + "\n")
+
     variables = zip(*variables)
 
     nccl = tf.contrib.distribute.AllReduceCrossDeviceOps()
