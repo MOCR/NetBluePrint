@@ -162,6 +162,7 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
                     targs[key]=value_splits[i]
     variables = []
     outs = []
+    original_gradz = construct_log["gradients"]
     for i in range(nb_GPU):
         with tf.device("/gpu:"+str(i)):
             for key in towers_dict[i]:
@@ -175,8 +176,9 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
                                  struct=struct,
                                  var_scope=True,
                                  **towers_args[i])
-
+            construct_log["gradients"] = original_gradz
             replica_variables = tf.global_variables(scope=construct_log["network_scope"][replica_name].name)
+            construct_log["printer"].printResult("INFO", "" construct_log["network_scope"][replica_name].name)
             replica_variables = sorted(replica_variables, key = lambda x : x.name)
             variables.append(replica_variables)
             outs.append(net_output)
