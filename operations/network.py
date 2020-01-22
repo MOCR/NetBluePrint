@@ -14,6 +14,8 @@ def network(input, layer_id, construct_log, name, struct=None, var_scope=True, *
         net_args=construct_log["network_default_params"][name]
         net_args.update(kwargs)
         net_scope=construct_log["network_scope"][name]
+        if isinstance(net_scope, str):
+            net_scope=None
     else:
         if struct==None:
             raise Exception("Network "+name+" refered without structure or previous creation")
