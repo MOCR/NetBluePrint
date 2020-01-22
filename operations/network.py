@@ -230,13 +230,14 @@ def nccl_gradient_sync(input, layer_id, construct_log):
 
     synchronized_grad_vars = []
     for tgv in grad_var_towers:
-        print(tgv)
-        print("\n")
-        per_replica = value_lib.PerReplica({ device: gv[0] for device, gv in zip(destinations, tgv)})
-        mirrored = nccl.reduce(tf.distribute.ReduceOp.MEAN, per_replica, destinations)
-        for device, gv in zip(destinations, tgv):
-            with tf.device(device):
-                synchronized_grad_vars.append((mirrored.get(device), gv[1]))
+        if tgv[0][0] is not None:
+            print(tgv)
+            print("\n")
+            per_replica = value_lib.PerReplica({ device: gv[0] for device, gv in zip(destinations, tgv)})
+            mirrored = nccl.reduce(tf.distribute.ReduceOp.MEAN, per_replica, destinations)
+            for device, gv in zip(destinations, tgv):
+                with tf.device(device):
+                    synchronized_grad_vars.append((mirrored.get(device), gv[1]))
 
     construct_log["gradients"] = synchronized_grad_vars
     return input
