@@ -186,6 +186,8 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
     nccl = tf.contrib.distribute.AllReduceCrossDeviceOps()
 
     for var in variables:
+        print(var)
+        print("\n")
         for replic in var[1:]:
             construct_log["initialization_opps:[]"]= tf.assign(replic, var[0])
 
