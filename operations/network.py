@@ -130,7 +130,6 @@ def all_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwar
 
 
 def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwargs):
-    from tensorflow.python.distribute import values as value_lib
     with tf.device("/cpu:0"):
         pynvml.nvmlInit()
         nb_GPU = pynvml.nvmlDeviceGetCount()
@@ -188,6 +187,7 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
             variables.append(replica_variables)
             outs.append(net_output)
 
+    construct_log["tower_devices"] = destinations
     master = variables[0]
 
     for i, rep in enumerate(variables):
@@ -196,8 +196,6 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
                     f.write(var.name + "\n")
 
     variables = zip(*variables)
-
-    nccl = tf.contrib.distribute.AllReduceCrossDeviceOps()
 
     with open("variables.csv", "w") as f:
         for var in variables:
@@ -209,32 +207,35 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
         for replic in var[1:]:
             construct_log["initialization_opps:[]"]= tf.assign(replic, var[0])
 
-    synchronize = []
-    construct_log["printer"].printResult("INFO", "creating sync opps")
-    with tf.device("/gpu:0"):
-        for v in variables:
-            print(v)
-            print("\n")
-            var_dest = []
-            per_replica = value_lib.PerReplica({ device: var for device, var in zip(destinations, v)})
-            mirrored = nccl.reduce(tf.distribute.ReduceOp.MEAN, per_replica, destinations)
-            for device, var in zip(destinations, v):
-                with tf.device(device):
-                    synchronize.append(var.assign(mirrored.get(device)))
-
-    construct_log["printer"].printResult("INFO", "finished sync opps")
-
-    with tf.control_dependencies(synchronize):
-        with tf.control_dependencies(outs):
-            construct_log["synchronize"] = tf.identity(0)
-
     for key in original_data:
         construct_log[key[3:]] = original_data[key]
     return input
 
-# def towerize_gradient()
-#
-# def nccl_gradient_sync(input, layer_id, construct_log):
+def towerize_gradient(input, layer_id, construct_log):
+    construct_log["tower_gradients:[]"] = construct_log["gradients"]
+    construct_log["gradients"] = []
+    return input
+
+def nccl_gradient_sync(input, layer_id, construct_log):
+    from tensorflow.python.distribute import values as value_lib
+
+    nccl = tf.contrib.distribute.AllReduceCrossDeviceOps()
+
+    tower_gradients = construct_log["tower_gradients"]
+    destinations = construct_log["tower_devices"]
+
+    grad_var_towers = zip(tower_gradients)
+
+    synchronized_grad_vars = []
+    for tgv in grad_var_towers:
+        per_replica = value_lib.PerReplica({ device: gv[0] for device, gv in zip(destinations, tgv)})
+        mirrored = nccl.reduce(tf.distribute.ReduceOp.MEAN, per_replica, destinations)
+        for device, gv in zip(destinations, tgv):
+            with tf.device(device):
+                synchronized_grad_vars.append((mirrored.get(device), gv[1]))
+
+    construct_log["gradients"] = synchronized_grad_vars
+    return input
 
 def on_device(input, layer_id, construct_log, device, struct):
     with tf.device(device):
