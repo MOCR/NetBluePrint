@@ -115,8 +115,8 @@ def create_workflow(input,
         with construct_log["printer"](type_n + " creation : " + network_name, timer=(type_n=="Main")):
             with get_scope(net_scope) as scope:
                 if net_scope is not None:
-                    construct_log["printer"].printResults("INFO", net_scope if isinstance(net_scope, str) else net_scope.name)
-                construct_log["printer"].printResults("INFO", scope if isinstance(scope, str) else scope.name)
+                    construct_log["printer"].printResult("INFO", net_scope if isinstance(net_scope, str) else net_scope.name)
+                construct_log["printer"].printResult("INFO", scope if isinstance(scope, str) else scope.name)
                 #print(scope.name)
                 if type_n == "Main":
                     construct_log["main_scope"] = scope
