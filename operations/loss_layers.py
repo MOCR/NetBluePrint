@@ -8,6 +8,7 @@ def additive_margin(input, layer_id, construct_log, labels, num_class,m=0.3,s=30
         weights_init=tf.random.normal(shape=[num_class, embedding_size], stddev=0.01)
         weights = tf.get_variable("centroids", initializer=weights_init)
         weights_normed = tf.nn.l2_normalize(weights, axis = -1)
+        construct_log["centroids"] = weights_normed
         weights_normed_transposed = tf.transpose(weights_normed)
 
         normed_input = tf.nn.l2_normalize(input, axis=-1)
