@@ -131,9 +131,12 @@ def all_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwar
 
 def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwargs):
     with tf.device("/cpu:0"):
-        pynvml.nvmlInit()
-        nb_GPU = pynvml.nvmlDeviceGetCount()
-        construct_log["number_of_GPUs"] = nb_GPU
+        if "number_of_GPUs" not in construct_log:
+            pynvml.nvmlInit()
+            nb_GPU = pynvml.nvmlDeviceGetCount()
+            construct_log["number_of_GPUs"] = nb_GPU
+        else:
+            nb_GPU = construct_log["number_of_GPUs"]
         gpu_input = [None]*nb_GPU
         towers_args = []
         towers_dict = []
