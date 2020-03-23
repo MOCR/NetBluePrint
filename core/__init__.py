@@ -38,7 +38,11 @@ import printProgress
 root_dir=os.path.split(__file__)[0]+"/.."
 
 operations_locations=["./operations/", root_dir+"/operations/"]
+if "NBP_OPERATIONS_PATH" in os.environ:
+    operations_locations+=os.environ["NBP_OPERATIONS_PATH"].split(":")
 templates_locations=["./templates/", root_dir+ "/templates/"]
+if "NBP_TEMPLATES_PATH" in os.environ:
+    templates_locations+=os.environ["NBP_TEMPLATES_PATH"].split(":")
 datasets_locations=["./datasets/", root_dir+"/datasets/"]
 if "DATASET_PATH" in os.environ:
     datasets_locations+=os.environ["DATASET_PATH"].split(":")

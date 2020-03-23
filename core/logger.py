@@ -30,13 +30,11 @@ class logger:
     def __init__(self, name, construct_log, struct, restore=True, run_to_restore=-1):
         runs = glob.glob(model_path + name + "_*/")
         runs_by_numbers = {}
+        run_number = 0
         for r in runs:
             number = int(r.split("/")[-2].split("_")[-1])
             runs_by_numbers[number] = r
-        i = 0
-        while i in runs_by_numbers:
-            i += 1
-        run_number = i
+            run_number = max(run_number, number+1)
         if run_to_restore == -1:
             if restore and run_number > 0:
                 if run_to_restore == -1 or run_to_restore >= run_number:
