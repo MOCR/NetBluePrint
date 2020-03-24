@@ -11,24 +11,26 @@ def compute_gradients(input, layer_id, construct_log, scopes=["self"], losses=[]
     with tf.name_scope("gradient_layer_"+layer_id):
         loss = sum(construct_log["losses"]+losses)
         tf.summary.scalar("loss_"+str(layer_id), loss)
-        if add_regularization:
-            regularization_loss = sum(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)) / len(
-                tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)) * 1e-5
-            tf.summary.scalar("regularization_loss_" + str(layer_id), regularization_loss)
-            loss += regularization_loss
         l_var = []
+        regularization_collection = []
         for s in scopes:
             if s == "self":
-                l_var+=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=construct_log["main_scope"].name)
+                scope = construct_log["main_scope"].name
             elif s.startswith("@:/"):
                 scope = construct_log[s[3:]]
                 if not isinstance(scope, str):
                     scope = scope.name
-                l_var += tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=scope)
             elif type(s) is str:
-                l_var += tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=construct_log["network_scope"][s].name)
+                scope = construct_log["network_scope"][s].name
             else:
-                l_var+=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=s.name)
+                scope = s.name
+            l_var+=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=scope)
+            if add_regularization:
+                regularization_collection += tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES, scope=scope)
+        if add_regularization:
+            regularization_loss = sum(regularization_collection) / len(regularization_collection) * 1e-5
+            tf.summary.scalar("regularization_loss_" + str(layer_id), regularization_loss)
+            loss += regularization_loss
 
         # with open(scopes[0].replace(""))
 
