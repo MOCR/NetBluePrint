@@ -14,6 +14,7 @@ def compute_gradients(input, layer_id, construct_log, scopes=["self"], losses=[]
         l_var = []
         regularization_collection = []
         for s in scopes:
+            construct_log["printer"].printResult("INFO", "Using scope : " + str(s))
             if s == "self":
                 scope = construct_log["main_scope"].name
             elif s.startswith("@:/"):
