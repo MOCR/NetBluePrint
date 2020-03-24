@@ -25,6 +25,7 @@ def compute_gradients(input, layer_id, construct_log, scopes=["self"], losses=[]
                 scope = construct_log["network_scope"][s].name
             else:
                 scope = s.name
+            print(scope)
             l_var+=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=scope)
             if add_regularization:
                 regularization_collection += tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES, scope=scope)
