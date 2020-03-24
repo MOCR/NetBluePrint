@@ -12,7 +12,10 @@ def compute_gradients(input, layer_id, construct_log, scopes=["self"], losses=[]
         loss = sum(construct_log["losses"]+losses)
         tf.summary.scalar("loss_"+str(layer_id), loss)
         if add_regularization:
-            loss += sum(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))*1e-5
+            regularization_loss = sum(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)) / len(
+                tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)) * 1e-5
+            tf.summary.scalar("regularization_loss_" + str(layer_id), regularization_loss)
+            loss += regularization_loss
         l_var = []
         for s in scopes:
             if s == "self":
