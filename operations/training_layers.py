@@ -30,7 +30,6 @@ def compute_gradients(input, layer_id, construct_log, scopes=["self"], losses=[]
                 regularization_collection += tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES, scope=scope)
         if add_regularization:
             regularization_collection = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
-            print(regularization_collection)
             regularization_loss = sum(regularization_collection) / len(regularization_collection) * 1e-5
             tf.summary.scalar("regularization_loss_" + str(layer_id), regularization_loss)
             loss += regularization_loss
@@ -71,8 +70,11 @@ def trainer(input, layer_id,construct_log, external_gradz=[], global_step=True, 
                 global_step = construct_log["global_step"]
 
         gradients=merged_gradz
+        print()
         for gr in gradients:
-            print(gr)
+            if not "gradient_sync" in gr[0].name:
+                print(gr)
+        print()
         apply_gradients=[construct_log["optimizer"].apply_gradients(gradients, global_step=global_step)]
 
         training_ops = apply_gradients
