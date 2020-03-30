@@ -51,6 +51,11 @@ def trainer(input, layer_id,construct_log, external_gradz=[], global_step=True, 
             construct_log["gradients"] = []
         gradients = construct_log["gradients"]+external_gradz
         processed_var = []
+        print()
+        for gr in gradients:
+            if "additive_margin" in gr[0].name:
+                print(gr)
+        print()
         for i in range(len(gradients)):
             if gradients[i][0] != None and gradients[i][1].name not in processed_var:
                 lgw=[gradients[i][0]]
