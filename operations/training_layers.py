@@ -71,18 +71,13 @@ def trainer(input, layer_id,construct_log, external_gradz=[], global_step=True, 
                 global_step = construct_log["global_step"]
 
         gradients=merged_gradz
+        for gr in gradients:
+            print(gr)
         apply_gradients=[construct_log["optimizer"].apply_gradients(gradients, global_step=global_step)]
 
         training_ops = apply_gradients
         if apply_batchnorm:
-            print()
-            print()
-            print("Appling batch norm !")
             batchnorm_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-            for op in batchnorm_ops:
-                print(op.name)
-            print()
-            print()
             training_ops += batchnorm_ops
         with tf.control_dependencies(training_ops):
             return tf.identity(input)
