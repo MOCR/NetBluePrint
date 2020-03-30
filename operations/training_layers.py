@@ -56,28 +56,28 @@ def trainer(input, layer_id,construct_log, external_gradz=[], global_step=True, 
             if "additive_margin" in gr[1].name:
                 print(gr)
         print()
-        for i in range(len(gradients)):
-            if gradients[i][0] != None and gradients[i][1].name not in processed_var:
-                lgw=[gradients[i][0]]
-                for ig in range(i+1, len(gradients)):
-                    if gradients[ig][1].name == gradients[i][1].name:
-                        lgw.append(gradients[ig][0])
-                if len(lgw)>1:
-                    merged_gradz.append((tf.reduce_mean(tf.stack(lgw), 0), gradients[i][1]))
-                else:
-                    merged_gradz.append((lgw[0], gradients[i][1]))
-                processed_var.append(gradients[ig][1].name)
-            if "additive_margin" in gradients[i][1].name:
-                print(gr)
-                print(merged_gradz[-1])
-        if global_step==True:
-            if "global_step" not in construct_log:
-                global_step = tf.get_variable("global_step", initializer=0)
-                construct_log["global_step"] = global_step
-            else:
-                global_step = construct_log["global_step"]
-
-        gradients=merged_gradz
+        # for i in range(len(gradients)):
+        #     if gradients[i][0] != None and gradients[i][1].name not in processed_var:
+        #         lgw=[gradients[i][0]]
+        #         for ig in range(i+1, len(gradients)):
+        #             if gradients[ig][1].name == gradients[i][1].name:
+        #                 lgw.append(gradients[ig][0])
+        #         if len(lgw)>1:
+        #             merged_gradz.append((tf.reduce_mean(tf.stack(lgw), 0), gradients[i][1]))
+        #         else:
+        #             merged_gradz.append((lgw[0], gradients[i][1]))
+        #         processed_var.append(gradients[ig][1].name)
+        #     if "additive_margin" in gradients[i][1].name:
+        #         print(gr)
+        #         print(merged_gradz[-1])
+        # if global_step==True:
+        #     if "global_step" not in construct_log:
+        #         global_step = tf.get_variable("global_step", initializer=0)
+        #         construct_log["global_step"] = global_step
+        #     else:
+        #         global_step = construct_log["global_step"]
+        #
+        # gradients=merged_gradz
         print()
         for gr in gradients:
             if "additive_margin" in gr[1].name:
