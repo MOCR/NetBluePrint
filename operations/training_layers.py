@@ -72,7 +72,7 @@ def trainer(input, layer_id,construct_log, external_gradz=[], global_step=True, 
         gradients=merged_gradz
         print()
         for gr in gradients:
-            if not "gradient_sync" in gr[0].name:
+            if "additive_margin" in gr[0].name:
                 print(gr)
         print()
         apply_gradients=[construct_log["optimizer"].apply_gradients(gradients, global_step=global_step)]
