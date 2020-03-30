@@ -53,7 +53,7 @@ def trainer(input, layer_id,construct_log, external_gradz=[], global_step=True, 
         processed_var = []
         print()
         for gr in gradients:
-            if "additive_margin" in gr[0].name:
+            if "additive_margin" in gr[1].name:
                 print(gr)
         print()
         for i in range(len(gradients)):
