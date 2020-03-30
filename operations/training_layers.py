@@ -80,7 +80,7 @@ def trainer(input, layer_id,construct_log, external_gradz=[], global_step=True, 
             print("Appling batch norm !")
             batchnorm_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
             for op in batchnorm_ops:
-                print(op)
+                print(op.name)
             print()
             print()
             training_ops += batchnorm_ops
