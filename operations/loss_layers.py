@@ -30,7 +30,7 @@ def additive_margin(input, layer_id, construct_log, labels, num_class,m=0.3,s=30
 
 
 def sampled_additive_margin(input, layer_id, construct_log, labels, num_class,m=0.3,s=30, weight=1.0, number_of_samples=20000):
-    with tf.variable_scope("additive_margin_"+str(layer_id), reuse=construct_log["reuse"]):
+    with tf.variable_scope("sampled_additive_margin_"+str(layer_id), reuse=construct_log["reuse"]):
         if num_class<number_of_samples:
             raise Exception("More samples than number of classes, abord..")
 
