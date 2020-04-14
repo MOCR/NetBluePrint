@@ -26,8 +26,9 @@ def saver(input, layer_id, construct_log, path="./", restore=True,scope=None):
         construct_log["saver"] = lambda i : s.save(sess, path)
         return input
 
-def load_checkpoint_scope(input, layer_id, construct_log, path, checkpoint_scope=None):
-    scope_name = tf.get_variable_scope().name + "/"
+def load_checkpoint_scope(input, layer_id, construct_log, path, checkpoint_scope=None, scope_name=None):
+    if scope_name is not None:
+        scope_name = tf.get_variable_scope().name + "/"
     with construct_log["printer"]("loading " + scope_name + " variables from "+path):
         if checkpoint_scope == None:
             checkpoint_scope = scope_name
