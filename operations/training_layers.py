@@ -51,11 +51,6 @@ def trainer(input, layer_id,construct_log, external_gradz=[], global_step=True, 
             construct_log["gradients"] = []
         gradients = construct_log["gradients"]+external_gradz
         processed_var = []
-        print()
-        for gr in gradients:
-            if "additive_margin" in gr[1].name:
-                print(gr)
-        print()
         for i in range(len(gradients)):
             if gradients[i][0] != None and gradients[i][1].name not in processed_var:
                 lgw=[gradients[i][0]]
@@ -76,11 +71,6 @@ def trainer(input, layer_id,construct_log, external_gradz=[], global_step=True, 
                 global_step = construct_log["global_step"]
 
         gradients=merged_gradz
-        print()
-        for gr in gradients:
-            if "additive_margin" in gr[1].name:
-                print(gr)
-        print()
         apply_gradients=[construct_log["optimizer"].apply_gradients(gradients, global_step=global_step)]
 
         training_ops = apply_gradients
