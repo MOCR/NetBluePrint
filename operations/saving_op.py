@@ -4,7 +4,7 @@ import os
 def saver(input, layer_id, construct_log, path="./", restore=True,scope=None):
     with tf.name_scope("saver_" + layer_id):
         if "logger" in construct_log:
-            restore = construct_log["logger"].restore
+            restore = construct_log["restore"]
             path = construct_log["logger"].model_path
         if scope !=None:
             if type(scope) != str:

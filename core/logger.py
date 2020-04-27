@@ -27,7 +27,7 @@ else:
 #gpu = pynvml.nvmlDeviceGetHandleByIndex(0)
 
 class logger:
-    def __init__(self, name, construct_log, struct, restore=True, run_to_restore=-1):
+    def __init__(self, name, restore=True, run_to_restore=-1):
         runs = glob.glob(model_path + name + "_*/")
         runs_by_numbers = {}
         run_number = 0
@@ -47,7 +47,7 @@ class logger:
         else:
             run_number = run_to_restore
             self.restore = True
-        self.run_number = run_number
+        self.id = run_number
         self.log_path = path+name+"_"+str(run_number)+"/"
         self.model_path = model_path+name+"_"+str(run_number)+"/"
         try:
@@ -62,14 +62,12 @@ class logger:
         self.tags = {}
         self.frames = Queue.Queue()
         self.current_frame = {}
-        self.registered_opp = []
 
         self.Running_thread = False
 
         self.launch_saving_thread()
 
         self.structure_blueprint = {}
-        self.structure_blueprint["MAIN"] = struct
         self.data = {}
 
 
@@ -85,14 +83,15 @@ class logger:
         logging_op = tf.py_func(log_val, [tensor], np.float32)
         self.tags[name] = logging_op
 
-    def register_opp(self, opp):
-        if opp not in self.registered_opp:
-            try:
-                self.structure_blueprint["operation_"+opp.func_name]=inspect.getsource(opp)
-                self.registered_opp.append(opp)
-            except:
-                pass
-
+    def register_opp(self, opp, name, type="func"):
+        if name not in self.local_data["blueprint"]:
+            if type == "func":
+                try:
+                    self.structure_blueprint[type+"_"+name]=inspect.getsource(opp)
+                except:
+                    pass
+            else:
+                self.local_data["blueprint"][type+"_"+name]=opp
 
     def finalize_frame(self, input):
         def frame_handler():
@@ -123,7 +122,7 @@ class logger:
         t.daemon = True
         t.start()
 
-    def save_header(self):
+    def save_data(self):
         with open(self.log_path + "header_"+str(time.time()) + ".pkl", "wb") as f:
             pickle.dump({ "structure_blueprint" : self.structure_blueprint, "data" : self.data}, f)
         with open(self.log_path + "header_"+str(time.time()) + ".json", "wb") as f:

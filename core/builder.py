@@ -33,6 +33,7 @@ def create_workflow(input,
                     reuse=None,
                     default_dict={},
                     printprog=printProgress.void_printer(),
+                    run_logger=None,
                     parent_log=None,
                     construct_log_config={},
                     net_scope=None,
@@ -71,11 +72,14 @@ def create_workflow(input,
             restore=True
         else:
             run_to_restore=-1
-        construct_log["logger"] = logger.logger(name=network_name,
-                                                construct_log=construct_log,
-                                                struct=configuration,
-                                                restore=restore,
-                                                run_to_restore=run_to_restore)
+
+        if run_logger is not None:
+            construct_log["logger"] = logger.logger(name=network_name,
+                                                    restore=restore,
+                                                    run_to_restore=run_to_restore)
+
+        construct_log["logger"].register_opp({"structure" : configuration,
+                                              "arguments" : default_dict}, network_name, "MAIN")
         construct_log.update(construct_log_config)
         type_n = "Main"
 
@@ -212,7 +216,7 @@ def create_workflow(input,
 
                         translate_arguments(c, construct_log, current_layer)
 
-                        construct_log["logger"].register_opp(opp)
+                        construct_log["logger"].register_opp(opp, opp.func_name)
                         # print(default_dict)
                         # print(opp.__code__.co_varnames, opp.__code__.co_argcount)
                         # print(c)
@@ -222,6 +226,6 @@ def create_workflow(input,
                     construct_log["local_arguments"] = default_dict
                     i+=1
     if type_n == "Main":
-        construct_log["logger"].save_header()
+        construct_log["logger"].save_data()
 
     return current_layer, construct_log
