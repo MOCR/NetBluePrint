@@ -18,7 +18,7 @@ def saver(input, layer_id, construct_log, path="./", restore=True,scope=None):
         #if not os.path.exists(path):
         #    os.makedirs(path)
         construct_log["printer"].addInfo(model_path=path)
-        path+="model.ckpt"
+        path = os.path.join(path, "model.ckpt")
         print(path+".index")
         if restore and os.path.exists(path+".index"):
             s.restore(sess, path)
