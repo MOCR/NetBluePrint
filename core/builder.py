@@ -72,6 +72,7 @@ def create_workflow(input,
             restore=True
         else:
             run_to_restore=-1
+        construct_log["restore"] = restore
 
         if run_logger is None:
             construct_log["logger"] = logger.logger(name=network_name,
