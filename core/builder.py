@@ -77,6 +77,8 @@ def create_workflow(input,
             construct_log["logger"] = logger.logger(name=network_name,
                                                     restore=restore,
                                                     run_to_restore=run_to_restore)
+        else:
+            construct_log["logger"] = run_logger
 
         construct_log["logger"].register_opp({"structure" : configuration,
                                               "arguments" : default_dict}, network_name, "MAIN")
