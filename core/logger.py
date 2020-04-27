@@ -103,7 +103,7 @@ class logger:
         with tf.control_dependencies([handler]):
             return tf.identity(input)
 
-    def addData(self, **kwargs):
+    def add_data(self, **kwargs):
         for key in list(kwargs.keys()):
             self.data[key] = kwargs[key]
 
