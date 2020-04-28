@@ -84,14 +84,14 @@ class logger:
         self.tags[name] = logging_op
 
     def register_opp(self, opp, name, type="func"):
-        if name not in self.local_data["blueprint"]:
+        if name not in self.structure_blueprint:
             if type == "func":
                 try:
                     self.structure_blueprint[type+"_"+name]=inspect.getsource(opp)
                 except:
                     pass
             else:
-                self.local_data["blueprint"][type+"_"+name]=opp
+                self.structure_blueprint[type+"_"+name]=opp
 
     def finalize_frame(self, input):
         def frame_handler():
