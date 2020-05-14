@@ -5,7 +5,7 @@ import glob
 import inspect
 
 import tensorflow as tf
-import Queue
+import queue
 
 import time
 import pickle
@@ -60,7 +60,7 @@ class logger:
             pass
 
         self.tags = {}
-        self.frames = Queue.Queue()
+        self.frames = queue.Queue()
         self.current_frame = {}
 
         self.Running_thread = False
@@ -98,7 +98,7 @@ class logger:
             self.frames.put(self.current_frame)
             self.current_frame = {}
             return np.zeros([1], dtype=np.float32)
-        with tf.control_dependencies(self.tags.values()):
+        with tf.control_dependencies(list(self.tags.values())):
             handler = tf.py_func(frame_handler, [], np.float32)
         with tf.control_dependencies([handler]):
             return tf.identity(input)
@@ -114,7 +114,7 @@ class logger:
                     frame = self.frames.get(timeout=1.0)
                     with open(self.log_path+"frame_"+str(time.time())+".pkl", "wb") as f:
                         pickle.dump(frame, f)
-                except Queue.Empty:
+                except queue.Empty:
                     pass #time.sleep(0.1)
 
         self.Running_thread = True

@@ -81,13 +81,13 @@ class PathDict:
         return keys
 
     def values(self):
-        return self.internal_dict.values()
+        return list(self.internal_dict.values())
 
     def update(self, other_dict):
         if isinstance(other_dict, PathDict):
             list_of_keys = other_dict.keys(leafs=True, recursive=True)
         else:
-            list_of_keys = other_dict.keys()
+            list_of_keys = list(other_dict.keys())
         for key in list_of_keys:
             value = other_dict[key]
             if isinstance(value, dict):

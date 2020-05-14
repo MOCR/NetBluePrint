@@ -102,7 +102,7 @@ def all_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwar
                     tdic[key] = value_splits[i]
                 original_data[key]=value_to_split
 
-            elif key in kwargs.keys():
+            elif key in list(kwargs.keys()):
                 if type(kwargs[key]) == str and kwargs[key].startswith("@:/"):
                     value_to_split = construct_log[kwargs[key][3:]]
                 else:
@@ -155,7 +155,7 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
                     tdic[key] = value_splits[i]
                 original_data[key]=value_to_split
 
-            elif key in kwargs.keys():
+            elif key in list(kwargs.keys()):
                 if type(kwargs[key]) == str and kwargs[key].startswith("@:/"):
                     value_to_split = construct_log[kwargs[key][3:]]
                 else:
@@ -193,7 +193,7 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
             for var in rep:
                     f.write(var.name + "\n")
 
-    variables = zip(*variables)
+    variables = list(zip(*variables))
 
     with open("variables.csv", "w") as f:
         for var in variables:
@@ -225,7 +225,7 @@ def nccl_gradient_sync(input, layer_id, construct_log):
         tower_gradients = construct_log["tower_gradients"]
         destinations = construct_log["tower_devices"]
 
-        grad_var_towers = zip(*tower_gradients)
+        grad_var_towers = list(zip(*tower_gradients))
 
         synchronized_grad_vars = []
 

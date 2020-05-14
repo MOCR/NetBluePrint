@@ -15,7 +15,7 @@ def gramMatrix_layer(input, layer_id, construct_log):
         features = tf.reshape(features, [-1, input_shape[3], input_shape[1] * input_shape[2]])
         # features = tf.reduce_mean(features, 0)
         mat = tf.matmul(features, tf.transpose(features, [0, 2, 1]))
-        print mat.get_shape()
+        print(mat.get_shape())
         if "gram_matrix" not in construct_log:
             construct_log["gram_matrix"] = []
         construct_log["gram_matrix"].append(mat)

@@ -1,4 +1,4 @@
-import core
+from . import core
 
 create_workflow=core.create_workflow
 printProgress=core.printProgress

@@ -16,7 +16,7 @@ def bufferize_dataset(input, layer_id, construct_log):
             tensors = []
             names = []
             shapes = []
-            for t in construct_log["data_inputs"].keys():
+            for t in list(construct_log["data_inputs"].keys()):
                 tens = construct_log["data_inputs"][t]
                 dtypes.append(tens.dtype)
                 tensors.append(tens)
@@ -43,7 +43,7 @@ def stage_dataset(input, layer_id,construct_log):
         tensors=[]
         names=[]
         shapes=[]
-        for t in construct_log["data_inputs"].keys():
+        for t in list(construct_log["data_inputs"].keys()):
             tens = construct_log["data_inputs"][t]
             if type(tens) == tf.Tensor:
                 dtypes.append(tens.dtype)

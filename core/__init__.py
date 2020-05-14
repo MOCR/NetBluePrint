@@ -18,7 +18,7 @@ awailable_filters={}
 
 operations_hash = {}
 
-import template_reader
+from . import template_reader
 
 from .filter_loader import filter_loader
 from os import listdir
@@ -27,10 +27,10 @@ import commentjson
 import tensorflow as tf
 import types
 import glob
-from dataset import dataset
+from .dataset import dataset
 import inspect
 
-import builder
+from . import builder
 import printProgress
 
 ### PYTHON LAYER FILES SCANNING ###
@@ -96,11 +96,11 @@ for m in modules:
         item = getattr(mod, c)
         if callable(item) and hasattr(item, "__code__"):
             if item.__code__.co_argcount >= 3 and item.__code__.co_varnames[0] == "input" and item.__code__.co_varnames[1] == "layer_id" and item.__code__.co_varnames[2] == "construct_log":
-                if item.func_name in operations and False:
+                if item.__name__ in operations and False:
                     raise Exception("Duplicate func_name in operations")
                 else:
-                    operations[item.func_name]=item
-                    operations_hash[item.func_name]=item
+                    operations[item.__name__]=item
+                    operations_hash[item.__name__]=item
 
 datasets_modules = pkgutil.iter_modules(datasets_locations)
 
@@ -126,9 +126,9 @@ def recursive_unicode_convertion(to_convert):
         for i in range(len(to_convert)):
             to_convert[i] = recursive_unicode_convertion(to_convert[i])
     elif type(to_convert) == dict:
-        for k in to_convert.keys():
+        for k in list(to_convert.keys()):
             to_convert[k] = recursive_unicode_convertion(to_convert[k])
-    elif isinstance(to_convert, unicode):
+    elif isinstance(to_convert, str):
         to_convert = to_convert.encode('ascii', 'ignore')
     return to_convert
 
@@ -137,7 +137,7 @@ for block in template_files:
         with open(block) as f:
             blockConf = commentjson.load(f)
     except Exception as e:
-        print "ERROR: " +__file__+ " => Cannot read block file : " + block
+        print("ERROR: " +__file__+ " => Cannot read block file : " + block)
         exit(-1)
     block_struct = []
     name = block.split("/")[-1].split(".")[0]
@@ -177,7 +177,7 @@ def tf_function_wrapper(tf_function, name):
                     arguments_list = decorated_func.__code__.co_varnames[:decorated_func.__code__.co_argcount]
                 else:
                     arguments_list = tf_function.__code__.co_varnames[:tf_function.__code__.co_argcount]
-                for k in kw.keys():
+                for k in list(kw.keys()):
                     if k in arguments_list:
                         filtered_kw[k]=kw[k]
                     else:

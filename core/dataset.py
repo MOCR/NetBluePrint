@@ -16,6 +16,6 @@ class dataset(object):
     def __getitem__(self, key):
         return self.data_dict[key]
     def get_keys(self):
-        return self.data_dict.keys()
+        return list(self.data_dict.keys())
     def get_datadict(self):
         return self.data_dict

@@ -8,6 +8,7 @@ Created on Sat Apr 15 14:57:22 2017
 import tensorflow as tf
 from tensorflow.contrib.layers import batch_norm
 import math
+from functools import reduce
 
 
     

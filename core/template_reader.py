@@ -1,7 +1,7 @@
 # import tensorflow as tf
 
 from NetBluePrint.core import builder
-from path_dict import PathDict
+from .path_dict import PathDict
 
 
 def create_block_operation(structure, name, argument_translation={}, default_parameters={}, scope_type="VAR"):
@@ -11,10 +11,10 @@ def create_block_operation(structure, name, argument_translation={}, default_par
             if "args" not in list(kw.keys()):
                 kw["args"] = []
             kw["args"] = args + kw["args"]
-        for def_arg in default_parameters.keys():
-            if def_arg not in kw.keys():
+        for def_arg in list(default_parameters.keys()):
+            if def_arg not in list(kw.keys()):
                 kw[def_arg] = default_parameters[def_arg]
-        for arg in kw.keys():
+        for arg in list(kw.keys()):
             if arg in argument_translation:
                 if type(argument_translation[arg]) is list:
                     for at in argument_translation[arg]:

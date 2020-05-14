@@ -8,9 +8,9 @@ import tensorflow as tf
 
 import printProgress
 import collections
-import logger
+from . import logger
 
-from path_dict import PathDict
+from .path_dict import PathDict
 
 operations = {}
 awailable_datasets={}
@@ -108,7 +108,7 @@ def create_workflow(input,
         for ic in range(len(c[1])):
             if type(c[1][ic]) is str:
                 c[1][ic] = path_argument_translation(c[1][ic], construct_log, current_layer)
-        for ic in c[2].keys():
+        for ic in list(c[2].keys()):
             if type(c[2][ic]) is str:
                 c[2][ic] = path_argument_translation(c[2][ic], construct_log, current_layer)
 
@@ -219,7 +219,7 @@ def create_workflow(input,
 
                         translate_arguments(c, construct_log, current_layer)
 
-                        construct_log["logger"].register_opp(opp, opp.func_name)
+                        construct_log["logger"].register_opp(opp, opp.__name__)
                         # print(default_dict)
                         # print(opp.__code__.co_varnames, opp.__code__.co_argcount)
                         # print(c)
