@@ -26,6 +26,8 @@ class PathDict:
         if "NBP_DEBUG" in os.environ:
             print(key)
         if type(key) is not list:
+            if isinstance(key, bytes):
+                key = key.decode("utf-8")
             key = key.split("/")
         local_key = key[0]
         child_key = key[1:]
