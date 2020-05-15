@@ -143,6 +143,7 @@ def update_assets():
             exit(-1)
         block_struct = []
         name = block.split("/")[-1].split(".")[0]
+        name = recursive_unicode_convertion(name)
         blockConf = recursive_unicode_convertion(blockConf)
         for l in blockConf["structure"]:
             if type(l) is dict:
