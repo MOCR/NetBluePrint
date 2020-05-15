@@ -31,6 +31,7 @@ def create_block_operation(structure, name, argument_translation={}, default_par
             raise Exception("block_hierarchy error")
         construct_log["block_hierarchy"].append(name)
         def_dict = PathDict(construct_log["default_dict"])
+        print(kw)
         def_dict.update(kw)
         construct_log["logger"].register_opp({"structure" : structure,
                                                              "argument_translation" : argument_translation,
