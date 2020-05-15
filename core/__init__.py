@@ -130,7 +130,7 @@ def update_assets():
         elif type(to_convert) == dict:
             for k in list(to_convert.keys()):
                 to_convert[k] = recursive_unicode_convertion(to_convert[k])
-        elif isinstance(to_convert, str) or isinstance(to_convert, bytes):
+        elif isinstance(to_convert, bytes):
             to_convert = to_convert.decode('utf-8', 'ignore')
         return to_convert
 
