@@ -12,12 +12,6 @@ It construct a dictionary of datasets that can be loaded in the workflow.
 import os, pkgutil
 import importlib
 
-operations = {}
-awailable_datasets={}
-awailable_filters={}
-
-operations_hash = {}
-
 from . import template_reader
 
 from .filter_loader import filter_loader
@@ -36,6 +30,12 @@ import printProgress
 def update_assets():
 
     ### PYTHON LAYER FILES SCANNING ###
+
+    operations = {}
+    awailable_datasets = {}
+    awailable_filters = {}
+
+    operations_hash = {}
 
     root_dir=os.path.split(__file__)[0]+"/.."
 
