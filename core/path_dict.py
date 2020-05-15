@@ -1,3 +1,4 @@
+import os
 
 class PathDict:
     def __init__(self, init_dict={}):
@@ -22,6 +23,8 @@ class PathDict:
             return local_node
 
     def __setitem__(self, key, value):
+        if "NBP_DEBUG" in os.environ:
+            print(key)
         if type(key) is not list:
             key = key.split("/")
         local_key = key[0]
