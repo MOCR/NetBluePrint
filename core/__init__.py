@@ -188,6 +188,23 @@ def update_assets():
                                 construct_log["printer"].printWarning(name+" has no argument \"" + k + "\", argument is ignored.")
                     return tf_function(input, **filtered_kw)
         return wrapped_function
+    
+    ### WRAPPING OF TENSORFLOW KERAS LAYERS ###
+
+    def tf_keras_layer_wrapper(tf_keras_layer, name):
+        def wrapped_layer(input, layer_id, construct_log, **kw):
+            with construct_log["printer"]("tensorflow "+name+" layer number " + str(layer_id)):
+                with tf.variable_scope("TF_"+name+"_"+str(layer_id)):
+                    filtered_kw = {}
+                    arguments_list = tf_keras_layer.__init__.__code__.co_varnames[:tf_keras_layer.__init__.__code__.co_argcount]
+                    for k in list(kw.keys()):
+                        if k in arguments_list:
+                            filtered_kw[k]=kw[k]
+                        else:
+                            if "printer" in construct_log and hasattr(construct_log["printer"], "printWarning"):
+                                construct_log["printer"].printWarning(name+" has no argument \"" + k + "\", argument is ignored.")
+                    return tf_keras_layer(**filtered_kw)(input)
+        return wrapped_layer
 
     for attr in dir(tf):
         obj = getattr(tf, attr)
@@ -228,6 +245,13 @@ def update_assets():
                 raise Exception("TF wrapping error : Unavailable function name")
             else:
                 operations["tf.math."+attr] = tf_function_wrapper(obj, "math."+attr)
+                
+    for attr in dir(tf.keras.layers):
+        obj = getattr(tf.keras.layers, attr)
+        if "tf.keras.layers."+attr in operations:
+            raise Exception("TF wrapping error : Unavailable function name")
+        else:
+            operations["tf.keras.layers."+attr] = tf_keras_layer_wrapper(obj, "keras.layers."+attr)
 
     #scanning awailable pretrained filters
 
