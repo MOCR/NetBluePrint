@@ -163,14 +163,17 @@ def create_workflow(input,
                         construct_log[var_path] = current_layer
                         opp = None
                     elif c[0] == "if":
+                        construct_log["printer"].printResult("INFO", "Evaluation IF structure")
                         translate_arguments(c, construct_log, current_layer)
                         condition = c[2]["condition"] if "condition" in list(c[2].keys()) else c[1][0]
                         if condition:
+                            construct_log["printer"].printResult("INFO", "Condition is TRUE")
                             additional_structure = c[2]["structure"] if "structure" in list(c[2].keys()) else c[1][-1]
                             if type(additional_structure) is not list:
                                 additional_structure=[additional_structure]
                             configuration = configuration[:i+1]+additional_structure+configuration[i+1:]
                         elif "else_structure" in c[2]:
+                            construct_log["printer"].printResult("INFO", "Condition is FALSE, alternative structure")
                             additional_structure = c[2]["else_structure"]
                             if type(additional_structure) is not list:
                                 additional_structure = [additional_structure]

@@ -7,6 +7,7 @@ from .path_dict import PathDict
 def create_block_operation(structure, name, argument_translation={}, default_parameters={}, scope_type="VAR"):
     def created_block(input, layer_id, construct_log, *args, **kw):
         # print kw
+        construct_log["printer"].printResult("INFO", "Template "+name + " pre-evaluation arguments")
         if len(args)!=0:
             if "args" not in list(kw.keys()):
                 kw["args"] = []
@@ -32,9 +33,11 @@ def create_block_operation(structure, name, argument_translation={}, default_par
         construct_log["block_hierarchy"].append(name)
         def_dict = PathDict(construct_log["default_dict"])
         def_dict.update(kw)
+        construct_log["printer"].printResult("INFO", "Template "+name + " saving template in logger")
         construct_log["logger"].register_opp({"structure" : structure,
                                                              "argument_translation" : argument_translation,
                                                              "default_parameters" : default_parameters},name, "template")
+        construct_log["printer"].printResult("INFO", "Template "+name + " starting sub-workflow creation")
         ret, _ = builder.create_workflow(input, structure, name + "_" + str(layer_id), default_dict=def_dict,
                                          parent_log=construct_log, scope_type=scope_type)
         del construct_log["block_hierarchy"][-1]

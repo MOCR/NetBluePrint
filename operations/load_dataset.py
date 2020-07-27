@@ -38,29 +38,34 @@ def bufferize_dataset(input, layer_id, construct_log):
             return input
 
 def stage_dataset(input, layer_id,construct_log):
-    with tf.name_scope("dataset_stager_" + layer_id):
-        dtypes=[]
-        tensors=[]
-        names=[]
-        shapes=[]
-        for t in list(construct_log["data_inputs"].keys()):
-            tens = construct_log["data_inputs"][t]
-            if type(tens) == tf.Tensor:
-                dtypes.append(tens.dtype)
-                tensors.append(tens)
-                names.append(t)
-                shapes.append(tens.get_shape().as_list())
-        stager=staging_area(dtypes, capacity=1, shapes=shapes)
-        construct_log["feed_stager:[]"]=stager.put(tensors)
-        sess = tf.get_default_session()
-        sess.run(construct_log["feed_stager"])
-        staged_tensors=stager.get()
-        #construct_log["data_inputs"] = {}
-        for i in range(len(staged_tensors)):
-            construct_log["data_inputs"][names[i]]=staged_tensors[i]
-        return input
+    with construct_log["printer"]("Dataset stager"):
+        with tf.name_scope("dataset_stager_" + layer_id):
+            dtypes=[]
+            tensors=[]
+            names=[]
+            shapes=[]
+            for t in list(construct_log["data_inputs"].keys()):
+                tens = construct_log["data_inputs"][t]
+                if type(tens) == tf.Tensor and ("Constants" not in construct_log or tens not in construct_log["Constants"]):
+                    construct_log["printer"].printResult("INFO", "Staging tensor : " + str(tens))
+                    dtypes.append(tens.dtype)
+                    tensors.append(tens)
+                    names.append(t)
+                    shapes.append(tens.get_shape().as_list())
+            stager=staging_area(dtypes, capacity=1, shapes=shapes)
+            construct_log["feed_stager:[]"]=stager.put(tensors)
+#             sess = tf.get_default_session()
+#             sess.run(construct_log["feed_stager"])
+            staged_tensors=stager.get()
+            #construct_log["data_inputs"] = {}
+            for i in range(len(staged_tensors)):
+                construct_log["data_inputs"][names[i]]=staged_tensors[i]
+            return input
 
 def feed_stager(input, layer_id,construct_log):
     with tf.name_scope("dataset_stage_feeder_" + layer_id):
         with tf.control_dependencies(construct_log["feed_stager"]):
             return tf.identity(input)
+    with construct_log["printer"]("Pre-feeding stagers"):
+        sess = tf.get_default_session()
+        sess.run(construct_log["feed_stager"])
