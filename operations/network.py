@@ -190,18 +190,9 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
     construct_log["tower_devices"] = destinations
     master = variables[0]
 
-    for i, rep in enumerate(variables):
-        with open("variables_"+str(i)+".csv", "w") as f:
-            for var in rep:
-                    f.write(var.name + "\n")
-
     variables = list(zip(*variables))
 
-    with open("variables.csv", "w") as f:
-        for var in variables:
-            for v in var:
-                f.write(v.name+ ", ")
-            f.write("\n")
+
 
     for var in variables:
         for replic in var[1:]:
