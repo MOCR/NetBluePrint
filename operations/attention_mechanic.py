@@ -15,23 +15,31 @@ def apply_attention_mask(input, layer_id, construct_log, trunk, residual=True):
             return input * trunk
 
 
-def self_attention(input, layer_id, construct_log, nb_head, cosinus=False):
-    with tf.name_scope("self_attention_"+str(layer_id)):
+def multi_head_attention(input, layer_id, construct_log, nb_head, attention_target=None):
+    with tf.name_scope("multi_head_attention_"+str(layer_id)):
         shape = input.get_shape().as_list()
         for i in range(len(shape)):
             if shape[i]==None:
                 shape[i]=-1
-        if cosinus:
-            input = tf.nn.l2_normalize(input, axis=-1)
-        vectors = tf.split(input, 3, axis=-1)
-        for i, vect in enumerate(vectors):
-            vect_size = vect.get_shape().as_list()[-1]
-            vect = tf.reshape(vect, [shape[0], shape[1], nb_head, int(vect_size/nb_head)])
-            vect = tf.transpose(vect, [0,2,1,3])
-            vectors[i] = vect
-        query_vectors = vectors[0]
-        key_vectors = vectors[1]
-        value_vectors = vectors[2]
+        # if cosinus:
+        #     input = tf.nn.l2_normalize(input, axis=-1)
+
+        def vector_decomposer(vectors):
+            vectors = tf.split(input, 3, axis=-1)
+            for i, vect in enumerate(vectors):
+                vect_size = vect.get_shape().as_list()[-1]
+                vect = tf.reshape(vect, [shape[0], shape[1], nb_head, int(vect_size/nb_head)])
+                vect = tf.transpose(vect, [0,2,1,3])
+                vectors[i] = vect
+            query_vectors = vectors[0]
+            key_vectors = vectors[1]
+            value_vectors = vectors[2]
+            return query_vectors, key_vectors, value_vectors
+
+        query_vectors, key_vectors, value_vectors = vector_decomposer(input)
+
+        if attention_target is not None:
+            _ , key_vectors, value_vectors = vector_decomposer(attention_target)
 
         scores = tf.matmul(query_vectors, tf.transpose(key_vectors, [0,1,3,2]))
         if not cosinus:
@@ -42,6 +50,8 @@ def self_attention(input, layer_id, construct_log, nb_head, cosinus=False):
         out_shape[-1] = out_shape[-1] / 3
         out = tf.reshape(out, out_shape)
         return out
+
+
 
 def fully_connected_norm(input, layer_id, construct_log, axis=-1, epsilon=1e-5):
     """Normalize to mean = 0, std = 1, then do a diagonal affine transform."""
