@@ -84,9 +84,16 @@ def set_adam_optimizer(input, layer_id, construct_log, learning_rate=0.0001, eps
     with tf.variable_scope("adamOptimizer_"+layer_id):
         construct_log["optimizer"]=tf.train.AdamOptimizer(learning_rate,epsilon=epsilon, beta1=beta )
         return input
-def initializer(input, layer_id, construct_log):
+def initializer(input, layer_id, construct_log, scope=None):
     sess = tf.get_default_session()
-    sess.run(tf.global_variables_initializer())
+    
+    
+    if scope == "self":
+        scope = tf.get_variable_scope()
+    if scope is not None:
+        sess.run(tf.variables_initializer(scope.global_variables()))
+    else:
+        sess.run(tf.global_variables_initializer())
     if "initialization_opps" in construct_log:
         sess.run(construct_log["initialization_opps"])
     return input

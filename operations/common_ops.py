@@ -17,12 +17,16 @@ def downsize_mean(input, layer_id, construct_log, reduce_factor):
             return tf.nn.avg_pool(input, [1,reduce_factor,reduce_factor, 1], [1,reduce_factor,reduce_factor, 1], padding= "SAME")
 
 def dropout(input, layer_id, construct_log, is_training=True, rate=0.5):
-    if is_training:
+    if isinstance(is_training, bool) and is_training:
         with tf.name_scope("dropout_"+str(layer_id)):
             construct_log["printer"].printResult("INFO", "Dropout set to training")
             return tf.nn.dropout(input,rate=rate)
-    else:
+    elif isinstance(is_training, bool):
         return input
+    else:
+        with tf.name_scope("dropout_"+str(layer_id)):
+            construct_log["printer"].printResult("INFO", "Conditional dropout")
+            return tf.cond(is_training, lambda : tf.nn.dropout(input,rate=rate), lambda : input)
 
 def layer_noise(input, layer_id, construct_log, is_training):
     if is_training:
