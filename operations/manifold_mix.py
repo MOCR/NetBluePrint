@@ -39,6 +39,9 @@ def manifold_mix_initializer(input, layer_id, construct_log, labels, nb_mix_laye
 
 def manifold_mix_layer(input, layer_id, construct_log, num_mix_layer, mixing_strategy=SPLIT):
     with tf.variable_scope("manifold_mix_layer_" + str(layer_id)):
+        batchsize = input.get_shape().as_list()[0]
+        if batchsize == -1:
+            batchsize = tf.shape(input)[0]
         def pass_by():
             return input, construct_log["manifold_mix"]["labels"]
         def mix_shuffle():
@@ -46,7 +49,10 @@ def manifold_mix_layer(input, layer_id, construct_log, num_mix_layer, mixing_str
             shuffled_input = tf.gather(input, shuffled_indexs)
             shuffled_labels = tf.gather(construct_log["manifold_mix"]["labels"], shuffled_indexs)
 
-            mix_parts = tf.random.uniform([tf.shape(input)[0]], minval=0.0, maxval=1.0)
+            mix_shape = [batchsize]
+            while len(mix_shape) < len(input.get_shape().as_list()):
+                mix_shape.append(1)
+            mix_parts = tf.random.uniform(mix_shape, minval=0.0, maxval=1.0)
 
             mixed_inputs = input*mix_parts + shuffled_input*(1.0-mix_parts)
             mixed_labels = construct_log["manifold_mix"]["labels"]*mix_parts + shuffled_labels * (1.0-mix_parts)
@@ -55,8 +61,8 @@ def manifold_mix_layer(input, layer_id, construct_log, num_mix_layer, mixing_str
             splited_input = tf.split(input, 2)
             splited_labels = tf.split(construct_log["manifold_mix"]["labels"], 2)
 
-            mix_parts = tf.random.uniform([tf.shape(input)[0]/2,1], minval=0.0, maxval=1.0)
-            mix_parts_2 = tf.random.uniform([tf.shape(input)[0]/2,1], minval=0.0, maxval=1.0)
+            mix_parts = tf.random.uniform([batchsize/2,1], minval=0.0, maxval=1.0)
+            mix_parts_2 = tf.random.uniform([batchsize/2,1], minval=0.0, maxval=1.0)
 
             mix_parts_input = tf.reshape(mix_parts, [tf.shape(input)[0]/2,1,1,1])
             mix_parts_input_2 = tf.reshape(mix_parts_2, [tf.shape(input)[0]/2,1,1,1])
