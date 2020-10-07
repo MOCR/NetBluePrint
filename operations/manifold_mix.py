@@ -78,3 +78,30 @@ def manifold_mix_layer(input, layer_id, construct_log, num_mix_layer, mixing_str
         construct_log["manifold_mix"]["labels"] = labels
         return out
 
+def spacial_mix(input, layer_id, construct_log, proba= 0.01, is_training=True):
+    def spacial_mix(input_tensor):
+        input_shape = input_tensor.get_shape().as_list()
+        spacial_dims = input_shape[1:-1]
+        spacial_size = 1
+        for s in spacial_dims:
+            spacial_size *= s
+        batchsize = input_shape[0]
+        if batchsize == -1:
+            batchsize = tf.shape(input_tensor)[0]
+        depth = input_shape[-1]
+        def spacial_mix_1(input_elem):
+            return tf.reshape(tf.random.shuffle(tf.reshape(input_elem, [spacial_size, depth])), spacial_dims + [depth])
+        mixed_input = tf.map_fn(lambda x: spacial_mix_1(x), input_tensor)
+        return tf.where(tf.greater(tf.random.uniform([batchsize], minval=0.0, maxval=1.0), 1.0-proba),
+                          x=mixed_input, y=input_tensor)
+    if isinstance(is_training, bool) and is_training:
+        with tf.name_scope("spacial_mix_" + str(layer_id)):
+            construct_log["printer"].printResult("INFO", "Spacial Mix set to training")
+
+            return spacial_mix(input)
+    elif isinstance(is_training, bool):
+        return input
+    else:
+        with tf.name_scope("spacial_mix_" + str(layer_id)):
+            construct_log["printer"].printResult("INFO", "Conditional spacial mix")
+            return tf.cond(is_training, lambda: spacial_mix(input), lambda: input)
