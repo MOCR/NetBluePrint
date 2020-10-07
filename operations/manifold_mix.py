@@ -90,7 +90,9 @@ def spacial_mix(input, layer_id, construct_log, proba= 0.01, is_training=True):
             batchsize = tf.shape(input_tensor)[0]
         depth = input_shape[-1]
         def spacial_mix_1(input_elem):
-            return tf.reshape(tf.random.shuffle(tf.reshape(input_elem, [spacial_size, depth])), spacial_dims + [depth])
+            flattened = tf.reshape(input_elem, [spacial_size, depth])
+            mix_flattened = tf.gather(flattened, tf.random.shuffle(tf.range(spacial_size)))
+            return tf.reshape(mix_flattened, spacial_dims + [depth])
         mixed_input = tf.map_fn(lambda x: spacial_mix_1(x), input_tensor)
         return tf.where(tf.greater(tf.random.uniform([batchsize], minval=0.0, maxval=1.0), 1.0-proba),
                           x=mixed_input, y=input_tensor)
