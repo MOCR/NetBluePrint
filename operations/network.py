@@ -150,21 +150,22 @@ def nccl_GPU(input, layer_id, construct_log, name, struct=None, splits=[], **kwa
         for key in splits:
             if key == "input":
                 gpu_input = tf.split(input, nb_GPU)
-            if key.startswith("@:/"):
-                value_to_split = construct_log[key[3:]]
-                value_splits = tf.split(value_to_split, nb_GPU)
-                for i, tdic in enumerate(towers_dict):
-                    tdic[key] = value_splits[i]
-                original_data[key]=value_to_split
-
             elif key in list(kwargs.keys()):
-                if type(kwargs[key]) == str and kwargs[key].startswith("@:/"):
-                    value_to_split = construct_log[kwargs[key][3:]]
+                if type(kwargs[key]) == str:
+                    value_to_split = construct_log[kwargs[key]]
                 else:
                     value_to_split = kwargs[key]
                 value_splits = tf.split(value_to_split, nb_GPU)
                 for i, targs in enumerate(towers_args):
                     targs[key]=value_splits[i]
+            else:
+                value_to_split = construct_log[key]
+                value_splits = tf.split(value_to_split, nb_GPU)
+                for i, tdic in enumerate(towers_dict):
+                    tdic[key] = value_splits[i]
+                original_data[key]=value_to_split
+
+            
     variables = []
     outs = []
     destinations = []
@@ -243,12 +244,13 @@ def nccl_gradient_sync(input, layer_id, construct_log):
         construct_log["gradients"] = synchronized_grad_vars
         return input
 
-def on_device(input, layer_id, construct_log, device, struct):
+def on_device(input, layer_id, construct_log, device, struct, **kwargs):
     with tf.device(device):
         net_output, _ = builder.create_workflow(input,
                                                 struct,
                                                 "Device_"+str(layer_id),
                                                 parent_log=construct_log,
+                                                default_dict=kwargs,
                                                 scope_type="name")
     return net_output
 

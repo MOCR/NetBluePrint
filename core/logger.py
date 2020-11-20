@@ -123,8 +123,9 @@ class logger:
         t.start()
 
     def save_data(self):
-        with open(self.log_path + "header_"+str(time.time()) + ".pkl", "wb") as f:
-            pickle.dump({ "structure_blueprint" : self.structure_blueprint, "data" : self.data}, f)
+        pass
+#         with open(self.log_path + "header_"+str(time.time()) + ".pkl", "wb") as f:
+#             pickle.dump({ "structure_blueprint" : self.structure_blueprint, "data" : self.data}, f)
         
 #         with open(self.log_path + "header_"+str(time.time()) + ".json", "w") as f:
 #             json.dump({ "structure_blueprint" : self.structure_blueprint}, f, indent=4)

@@ -17,11 +17,7 @@ def compute_gradients(input, layer_id, construct_log, scopes=["self"], losses=[]
             construct_log["printer"].printResult("INFO", "Using scope : " + str(s))
             if s == "self":
                 scope = construct_log["main_scope"].name
-            elif s.startswith("@:/"):
-                scope = construct_log[s[3:]]
-                if not isinstance(scope, str):
-                    scope = scope.name
-            elif type(s) is str:
+            elif isinstance(s, str):
                 scope = construct_log["network_scope"][s].name
             else:
                 scope = s.name

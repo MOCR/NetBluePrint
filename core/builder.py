@@ -105,12 +105,15 @@ def create_workflow(input,
     layer_numerotation = OP_COUNT
 
     def translate_arguments(c, construct_log, current_layer):
-        for ic in range(len(c[1])):
-            if type(c[1][ic]) is str:
-                c[1][ic] = path_argument_translation(c[1][ic], construct_log, current_layer)
-        for ic in list(c[2].keys()):
-            if type(c[2][ic]) is str:
-                c[2][ic] = path_argument_translation(c[2][ic], construct_log, current_layer)
+        if isinstance(c, list):
+            indexs = range(len(c))
+        elif isinstance(c, dict):
+            indexs = list(c.keys())
+        for i in indexs:
+            if isinstance(c[i], list) or isinstance(c[i], dict):
+                translate_arguments(c[i], construct_log, current_layer)
+            elif isinstance(c[i], str):
+                c[i] = path_argument_translation(c[i], construct_log, current_layer)
 
     def get_scope(net_scope):
         if scope_type=="VAR":
@@ -152,6 +155,9 @@ def create_workflow(input,
                         pass
                     elif opp in operations:
                         opp = operations[opp]
+                    elif isinstance(opp, tf.Tensor):
+                        current_layer = opp
+                        opp = None
                     # enable setting current_layer from a variable in construct_log found with a specific path (starting with "@:/")
                     elif c[0].startswith("@:/"):
                         var_path = c[0][3:]
