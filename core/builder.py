@@ -63,9 +63,10 @@ def create_workflow(input,
         construct_log["features"] = []
         construct_log["printer"] = printprog
         construct_log["default_dict"] = default_dict
-        construct_log["awailable_datasets"]=awailable_datasets
-        construct_log["awailable_filters"]=awailable_filters
-        construct_log["awailable_operations"]=operations
+        construct_log["awailable_datasets"] = awailable_datasets
+        construct_log["awailable_filters"] = awailable_filters
+        construct_log["awailable_operations"] = operations
+        construct_log["VERSIONS/tensorflow"] = tf.__version__
         construct_log["reuse"] = reuse
         if type(restore) == int:
             run_to_restore=restore
@@ -104,14 +105,14 @@ def create_workflow(input,
     layer_numbers={}
     layer_numerotation = OP_COUNT
 
-    def translate_arguments(c, construct_log, current_layer):
+    def translate_arguments(c, construct_log, current_layer, max_depth=2):
         if isinstance(c, list):
             indexs = range(len(c))
         elif isinstance(c, dict):
             indexs = list(c.keys())
         for i in indexs:
-            if isinstance(c[i], list) or isinstance(c[i], dict):
-                translate_arguments(c[i], construct_log, current_layer)
+            if isinstance(c[i], list) or isinstance(c[i], dict) and max_depth>2:
+                translate_arguments(c[i], construct_log, current_layer, max_depth-1)
             elif isinstance(c[i], str):
                 c[i] = path_argument_translation(c[i], construct_log, current_layer)
 
