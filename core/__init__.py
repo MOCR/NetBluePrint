@@ -13,6 +13,7 @@ import os, pkgutil
 import importlib
 
 from . import template_reader
+from .operator_decorator import nbp_operation
 
 from .filter_loader import filter_loader
 from os import listdir
@@ -97,11 +98,14 @@ def update_assets():
         for c in contenant:
             item = getattr(mod, c)
             if callable(item) and hasattr(item, "__code__"):
-                if item.__code__.co_argcount >= 3 and item.__code__.co_varnames[0] == "input" and item.__code__.co_varnames[1] == "layer_id" and item.__code__.co_varnames[2] == "construct_log":
+                if item.__code__.co_argcount >= 3 \
+                        and (item.__code__.co_varnames[0] == "input" or item.__code__.co_varnames[0] == "layer_input")\
+                        and item.__code__.co_varnames[1] == "layer_id" \
+                        and item.__code__.co_varnames[2] == "construct_log":
                     if item.__name__ in operations and False:
                         raise Exception("Duplicate func_name in operations")
                     else:
-                        operations[item.__name__]=item
+                        operations[item.__name__]=nbp_operation(item)
                         operations_hash[item.__name__]=item
 
     datasets_modules = pkgutil.iter_modules(datasets_locations)
@@ -166,11 +170,12 @@ def update_assets():
         if name in operations:
             raise Exception("Unavailable block name")
         else:
-            operations[name] = block_op
+            operations[name] = nbp_operation(block_op, name)
 
     ### WRAPPING OF TENSORFLOW FUNCTIONS ###
 
     def tf_function_wrapper(tf_function, name):
+        @nbp_operation(opp_name=name)
         def wrapped_function(input, layer_id, construct_log, **kw):
             with construct_log["printer"]("tensorflow "+name+" layer number " + str(layer_id)):
                 with tf.variable_scope("TF_"+name+"_"+str(layer_id)):
@@ -192,6 +197,7 @@ def update_assets():
     ### WRAPPING OF TENSORFLOW KERAS LAYERS ###
 
     def tf_keras_layer_wrapper(tf_keras_layer, name):
+        @nbp_operation(opp_name=name)
         def wrapped_layer(input, layer_id, construct_log, **kw):
             with construct_log["printer"]("tensorflow "+name+" layer number " + str(layer_id)):
                 with tf.variable_scope("TF_"+name+"_"+str(layer_id)):

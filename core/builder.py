@@ -8,7 +8,10 @@ import tensorflow as tf
 
 import printProgress
 import collections
+import copy
+
 from . import logger
+from .utils import construct_log_pointer
 
 from .path_dict import PathDict
 
@@ -19,21 +22,12 @@ awailable_filters={}
 LAYER_COUNT=0
 OP_COUNT=1
 
-def path_argument_translation(argument, construct_log, current_layer):
-    if argument.startswith("@:/"):
-        var_path = argument[3:]
-        argument = construct_log[var_path]
-    elif argument == "@input":
-        argument = current_layer
-    return argument
-
 def create_workflow(input,
                     configuration,
                     network_name,
                     reuse=None,
                     default_dict={},
                     printprog=printProgress.void_printer(),
-                    run_logger=None,
                     parent_log=None,
                     construct_log_config={},
                     net_scope=None,
@@ -59,14 +53,12 @@ def create_workflow(input,
         construct_log = PathDict()
         construct_log["scopes"] = []
         construct_log["losses"] = []
-        construct_log["weight"] = []
-        construct_log["features"] = []
         construct_log["printer"] = printprog
         construct_log["default_dict"] = default_dict
         construct_log["awailable_datasets"] = awailable_datasets
         construct_log["awailable_filters"] = awailable_filters
         construct_log["awailable_operations"] = operations
-        construct_log["VERSIONS/tensorflow"] = tf.__version__
+        construct_log["BUILD/VERSIONS/tensorflow"] = tf.__version__
         construct_log["reuse"] = reuse
         if type(restore) == int:
             run_to_restore=restore
@@ -75,12 +67,9 @@ def create_workflow(input,
             run_to_restore=-1
         construct_log["restore"] = restore
 
-        if run_logger is None:
-            construct_log["logger"] = logger.logger(name=network_name,
-                                                    restore=restore,
-                                                    run_to_restore=run_to_restore)
-        else:
-            construct_log["logger"] = run_logger
+        construct_log["logger"] = logger.logger(name=network_name,
+                                                restore=restore,
+                                                run_to_restore=run_to_restore)
 
         construct_log["logger"].register_opp({"structure" : configuration,
                                               "arguments" : default_dict}, network_name, "MAIN")
@@ -102,19 +91,6 @@ def create_workflow(input,
     else:
         raise Exception("Bad type : parent_log should be of type PathDict but is " + type(parent_log))
     construct_log["local_arguments"] = default_dict
-    layer_numbers={}
-    layer_numerotation = OP_COUNT
-
-    def translate_arguments(c, construct_log, current_layer, max_depth=2):
-        if isinstance(c, list):
-            indexs = range(len(c))
-        elif isinstance(c, dict):
-            indexs = list(c.keys())
-        for i in indexs:
-            if isinstance(c[i], list) or isinstance(c[i], dict) and max_depth>2:
-                translate_arguments(c[i], construct_log, current_layer, max_depth-1)
-            elif isinstance(c[i], str):
-                c[i] = path_argument_translation(c[i], construct_log, current_layer)
 
     def get_scope(net_scope):
         if scope_type=="VAR":
@@ -128,15 +104,31 @@ def create_workflow(input,
                 if net_scope is not None:
                     construct_log["printer"].printResult("INFO", net_scope if isinstance(net_scope, str) else net_scope.name)
                 construct_log["printer"].printResult("INFO", scope if isinstance(scope, str) else scope.name)
-                #print(scope.name)
-                if type_n == "Main":
+                if "BUILD/main_scope" not in construct_log:
                     construct_log["main_scope"] = scope
+                    construct_log["BUILD/main_scope"] = scope
                 construct_log["local_scope"] = scope
+                construct_log["BUILD/local_scope"] = scope
+                if "BUILD/local_path" in construct_log:
+                    local_path = construct_log["BUILD/local_path"] + "/" + network_name
+                else:
+                    local_path = "BUILD/build_spaces/" + network_name
+                construct_log["BUILD/local_path"] = local_path
+
                 if type(configuration) is not list:
-                    configuration=[configuration]
-                i=0
-                while i < len(configuration):
-                    c = configuration[i]
+                    configuration = [configuration]
+
+                construct_log[local_path + "/scope"] = scope
+                construct_log[local_path + "/arguments"] = default_dict
+                construct_log[local_path + "/structure"] = configuration
+                construct_log[local_path + "/layer_numbers"] = {}
+
+                configuration = construct_log_pointer(local_path + "/structure", construct_log)
+
+                i = construct_log["BUILD/local_path"]+"/build_cursor"
+                construct_log[i] = 0
+                while construct_log[i] < len(configuration()):
+                    c = configuration()[construct_log[i]]
                     if type(c) is not list:
                         c=[c]
                     c = list(c)
@@ -169,23 +161,6 @@ def create_workflow(input,
                         var_path = c[0][3:]
                         construct_log[var_path] = current_layer
                         opp = None
-                    elif c[0] == "if":
-                        construct_log["printer"].printResult("INFO", "Evaluation IF structure")
-                        translate_arguments(c, construct_log, current_layer)
-                        condition = c[2]["condition"] if "condition" in list(c[2].keys()) else c[1][0]
-                        if condition:
-                            construct_log["printer"].printResult("INFO", "Condition is TRUE")
-                            additional_structure = c[2]["structure"] if "structure" in list(c[2].keys()) else c[1][-1]
-                            if type(additional_structure) is not list:
-                                additional_structure=[additional_structure]
-                            configuration = configuration[:i+1]+additional_structure+configuration[i+1:]
-                        elif "else_structure" in c[2]:
-                            construct_log["printer"].printResult("INFO", "Condition is FALSE, alternative structure")
-                            additional_structure = c[2]["else_structure"]
-                            if type(additional_structure) is not list:
-                                additional_structure = [additional_structure]
-                            configuration = configuration[:i + 1] + additional_structure + configuration[i + 1:]
-                        opp = None
                     elif c[0].startswith("&:"):
                         opp_target = c[0][2:]
                         if opp_target not in default_dict:
@@ -194,50 +169,12 @@ def create_workflow(input,
                     else:
                         raise Exception("Unknown operation : " + c[0])
                     if opp != None:
-                        if opp not in layer_numbers:
-                            layer_numbers[opp]=0
-                        if layer_numerotation == OP_COUNT:
-                            layer_id = str(layer_numbers[opp])
-                        else:
-                            layer_id = str(i)
-                        layer_numbers[opp]+=1
-                        if isinstance(default_dict, PathDict):
-                            default_dict_keys = list(default_dict.keys(leafs=True, recursive=True))
-                        else:
-                            default_dict_keys = list(default_dict.keys())
-                        for v_name in default_dict_keys:
-                            split_v_name = v_name.split("/", 1)
-                            if len(split_v_name) > 1:
-                                if split_v_name[0] == c[0] or split_v_name[0] == c[0] + "_" + str(layer_id):
-                                    c[2][split_v_name[1]] = default_dict[v_name]
-                            else:
-                                add_var = False
-                                try:
-                                    if opp.__code__.co_varnames.index(v_name) < opp.__code__.co_argcount:
-                                        add_var = True
-                                except:
-                                    pass
-                                try:
-                                    if ("kw" in opp.__code__.co_varnames and "args" in opp.__code__.co_varnames)\
-                                            or (opp.__code__.co_varnames.index("kw") <= opp.__code__.co_argcount):
-                                        add_var = True
-                                except:
-                                    pass
-                                if add_var:
-                                    if v_name not in c[2]:
-                                        c[2][v_name] = default_dict[v_name]
-
-                        translate_arguments(c, construct_log, current_layer)
-
-                        construct_log["logger"].register_opp(opp, opp.__name__)
-                        # print(default_dict)
-                        # print(opp.__code__.co_varnames, opp.__code__.co_argcount)
-                        # print(c)
-                        current_layer = opp(current_layer, layer_id, construct_log, *c[1], **c[2])
-                        construct_log["features"].append(current_layer)
+                        current_layer = opp(current_layer, construct_log, *c[1], **c[2])
                     construct_log["local_scope"] = scope
                     construct_log["local_arguments"] = default_dict
-                    i+=1
+                    construct_log[i]+=1
+                construct_log["BUILD/local_path"] = "/".join(construct_log["BUILD/local_path"].split("/")[:-1])
+
     if type_n == "Main":
         construct_log["logger"].save_data()
 
